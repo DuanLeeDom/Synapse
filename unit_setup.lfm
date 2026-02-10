@@ -1,0 +1,74 @@
+object Form_Setup: TForm_Setup
+  Left = 500
+  Height = 482
+  Top = 250
+  Width = 407
+  BorderStyle = bsDialog
+  Caption = 'Configuração do Sistema'
+  ClientHeight = 482
+  ClientWidth = 407
+  Position = poScreenCenter
+  LCLVersion = '4.4.0.0'
+  object lbl_info: TLabel
+    Left = 20
+    Height = 124
+    Top = 20
+    Width = 360
+    AutoSize = False
+    BidiMode = bdRightToLeftNoAlign
+    Caption = 'Aguarde um momento.'#10#10'Estamos verificando atualizações e instalando as dependências necessárias para o funcionamento completo do programa.'#10'Esse processo pode levar alguns minutos. Por favor, aguarde.'
+    ParentBidiMode = False
+    ParentColor = False
+    WordWrap = True
+  end
+  object ProgressBar1: TProgressBar
+    Left = 20
+    Height = 10
+    Top = 328
+    Width = 360
+    TabOrder = 0
+  end
+  object Memo_Log: TMemo
+    Left = 20
+    Height = 204
+    Top = 120
+    Width = 360
+    Color = clBlack
+    Font.Color = clSilver
+    Font.Name = 'Courier New'
+    ParentFont = False
+    ReadOnly = True
+    ScrollBars = ssAutoBoth
+    TabOrder = 1
+  end
+  object GroupBox1: TGroupBox
+    Left = 0
+    Height = 100
+    Top = 384
+    Width = 407
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    BorderSpacing.Around = 15
+    ClientHeight = 91
+    ClientWidth = 401
+    TabOrder = 2
+    object Button1: TButton
+      Left = 24
+      Height = 33
+      Top = 32
+      Width = 115
+      Caption = 'Cancelar'
+      TabOrder = 0
+    end
+    object btn_instalar: TButton
+      Left = 256
+      Height = 33
+      Top = 32
+      Width = 115
+      Caption = 'INSTALAR'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 1
+      OnClick = btn_instalarClick
+    end
+  end
+end
