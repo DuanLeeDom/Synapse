@@ -2,8 +2,8 @@
 ### The Bridge Between the Web and Your Timeline.
 
 <div style="display: flex; justify-content: space-between; align-items: center;">
-  <img src="DaVinci Resolve - Media Prep Tool 1.png" height="400">
-  <img src="DaVinci Resolve - Media Prep Tool 2.png" height="400">
+  <img src="DaVinci Resolve - Media Prep Tool 1.png" height="300">
+  <img src="DaVinci Resolve - Media Prep Tool 2.png" height="300">
 </div>
 
 
