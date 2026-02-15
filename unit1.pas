@@ -6,11 +6,11 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, EditBtn,
-  Menus, Process, Unit_Setup;
+  Menus, ExtCtrls, RTTICtrls, Process, Unit_Setup;
 
 type
-  { TForm1 }
-  TForm1 = class(TForm)
+  { TfrmPrincipal }
+  TfrmPrincipal = class(TForm)
     Button1: TButton;
     Button2: TButton;
     Button3: TButton;
@@ -19,12 +19,33 @@ type
     Button6: TButton;
     Button7: TButton;
     button_process: TButton;
+    button_process1: TButton;
     ComboBox_options: TComboBox;
+    ComboBox_Formatos: TComboBox;
     DirectoryEdit: TDirectoryEdit;
-    mnuPrincipal_Partes: TGroupBox;
+    DirectoryEdit1: TDirectoryEdit;
+    GroupBox1: TGroupBox;
+    GroupBox2: TGroupBox;
+    GroupBox3: TGroupBox;
+    GroupBox_Sobre: TGroupBox;
+    GroupBox_Console1: TGroupBox;
+    GroupBox_DiretoDaVinci: TGroupBox;
+    GroupBox_Baixador: TGroupBox;
+    GroupBox_Export1: TGroupBox;
+    GroupBox_Options: TGroupBox;
+    GroupBoxPrincipal: TGroupBox;
+    GroupBox_Options1: TGroupBox;
     GroupBox_Source: TGroupBox;
     GroupBox_Export: TGroupBox;
     GroupBox_Console: TGroupBox;
+    GroupBox_Source1: TGroupBox;
+    Image1: TImage;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    lbl_info: TLabel;
+    Memo_visual_console1: TMemo;
     MenuItem1: TMenuItem;
     MenuItem10: TMenuItem;
     MenuItem11: TMenuItem;
@@ -67,10 +88,15 @@ type
     Label1: TLabel;
     Label2: TLabel;
     Memo_visual_console: TMemo;
+    url_web1: TEdit;
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
     procedure button_processClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure MenuItem10Click(Sender: TObject);
+    procedure MenuItem31Click(Sender: TObject);
+    procedure MudarTela(Alvo: TGroupBox);
   private
     FVerificado: Boolean;
     function GetFFmpegProfile(Index: Integer): string;
@@ -78,27 +104,34 @@ type
   end;
 
 var
-  Form1: TForm1;
+  frmPrincipal: TfrmPrincipal;
 
 implementation
 
 {$R *.lfm}
 
-{ TForm1 }
+{ TfrmPrincipal }
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TfrmPrincipal.FormCreate(Sender: TObject);
 begin
   FVerificado := False; // Garante que a verificação comece do zero
 end;
 
-procedure TForm1.FormShow(Sender: TObject);
+procedure TfrmPrincipal.FormShow(Sender: TObject);
 var
   DistroNome, Msg: string;
 begin
-  // 1. Evita que a verificação rode em loop (ex: ao minimizar/restaurar)
-  if FVerificado then Exit;
+  // 1. Bloqueio de repetição
+  if FVerificado = True then
+  begin
+    Form_Setup.Show;
+  end
+  else
+  begin
+    Form_Setup.Show;
+  end;
 
-  // 2. Verificação Profissional de Dependências via Unit_Setup
+  // 2. Verificação Inicial: Os programas já existem no Linux?
   if not Form_Setup.VerificarAmbiente then
   begin
     DistroNome := Form_Setup.NomeDoSistema;
@@ -106,57 +139,74 @@ begin
 
     Msg := 'Sistema Detectado: ' + DistroNome + sLineBreak +
            '🛠️ Status: yt-dlp ou ffmpeg não encontrados.' + sLineBreak +
-           'O instalador será iniciado agora para configurar seu ambiente.';
+           'O assistente de configuração será aberto agora.';
 
-    MessageDlg('Assistente de Dependências', Msg, mtInformation, [mbOK], 0);
+    MessageDlg('Configuração Necessária', Msg, mtInformation, [mbOK], 0);
 
-    // Abre o setup. Se o usuário fechar sem instalar (não retornar mrOk), encerra o app.
+    // ABRE O SETUP: O código para aqui e espera o usuário terminar o Setup
     if Form_Setup.ShowModal <> mrOk then
     begin
+      // Se ele fechou o setup sem instalar ou deu erro, encerra o programa todo
       Application.Terminate;
       Exit;
     end;
-
-    // Se chegou aqui, instalou com sucesso. Força o foco de volta para a Unit1.
-    Application.ProcessMessages;
-    Self.BringToFront;
-    Self.SetFocus;
   end;
 
-  // 3. Configurações de Interface (Só rodam após validação do ambiente)
-  // Preenche o ComboBox e define o item padrão
+  // 3. Chegando aqui, o ambiente está OK (ou já estava ou foi instalado agora)
+  FVerificado := True;
+
+  // 4. Configuração visual inicial (O que o usuário vê primeiro)
+  MudarTela(GroupBox_DiretoDaVinci);
+
+  // Preenche as opções de conversão
   ComboBox_options.Items.Clear;
   ComboBox_options.Items.Add('Master: DNxHR HQX (10-bit .MOV)');
   ComboBox_options.Items.Add('Proxy: DNxHR LB (Leve .MOV)');
   ComboBox_options.Items.Add('Audio: PCM High-End (24-bit .WAV)');
   ComboBox_options.ItemIndex := 0;
 
-  // Força o componente a se desenhar na tela (evita ficar invisível no GTK/Qt)
-  ComboBox_options.Invalidate;
+  // Preenche as opções do baixador comum
+  ComboBox_Formatos.Items.Clear;
+  ComboBox_Formatos.Items.Add('MP4 (H.264 + AAC)');
+  ComboBox_Formatos.Items.Add('MKV (Matroska)');
+  ComboBox_Formatos.Items.Add('MP3 (Apenas Áudio)');
+  ComboBox_Formatos.ItemIndex := 0;
 
-  // 4. Define a pasta padrão de vídeos no Linux
+  // 5. Define pasta padrão de vídeos
   if DirectoryExists(GetEnvironmentVariable('HOME') + '/Vídeos') then
      DirectoryEdit.Directory := GetEnvironmentVariable('HOME') + '/Vídeos'
   else
      DirectoryEdit.Directory := GetCurrentDir;
 
-  // 5. Finalização do Log Inicial
+  // 6. Log de Boas-vindas no Console
   Memo_visual_console.Lines.Clear;
-  Memo_visual_console.Lines.Add('[SISTEMA] Ambiente verificado com sucesso.');
+  Memo_visual_console.Lines.Add('[SISTEMA] Synapse Media Tool Iniciada.');
   Memo_visual_console.Lines.Add('[SISTEMA] Distribuição: ' + Form_Setup.NomeDoSistema);
-  Memo_visual_console.Lines.Add('[OK] Tudo pronto para preparar sua mídia!');
+  Memo_visual_console.Lines.Add('[OK] Ambiente pronto para o DaVinci Resolve.');
 
-  // Marca como verificado para não repetir este bloco
-  FVerificado := True;
   Self.Repaint;
 end;
 
-procedure TForm1.MenuItem10Click(Sender: TObject);
+procedure TfrmPrincipal.MenuItem10Click(Sender: TObject);
 begin
   Close;
 end;
 
-function TForm1.GetFFmpegProfile(Index: Integer): string;
+procedure TfrmPrincipal.MudarTela(Alvo: TGroupBox);
+begin
+  // 1. Esconde TODAS as telas primeiro
+    GroupBox_DiretoDaVinci.Visible := False;
+    GroupBox_Baixador.Visible := False;
+    GroupBox_Sobre.Visible := False;
+    // Adicione aqui os próximos GroupBox que criar (Conversor, etc)
+
+    // 2. Mostra apenas a que foi pedida
+    if Assigned(Alvo) then
+      Alvo.Visible := True;
+end;
+
+
+function TfrmPrincipal.GetFFmpegProfile(Index: Integer): string;
 begin
   // Perfis otimizados para edição no DaVinci Resolve (DNxHR)
   case Index of
@@ -167,7 +217,7 @@ begin
   end;
 end;
 
-procedure TForm1.button_processClick(Sender: TObject);
+procedure TfrmPrincipal.button_processClick(Sender: TObject);
 var
   AProcess: TProcess;
   Cmd, Ext: string;
@@ -223,6 +273,21 @@ begin
     button_process.Caption := 'PROCESSAR';
     AProcess.Free;
   end;
+end;
+
+procedure TfrmPrincipal.Button1Click(Sender: TObject);
+begin
+  MudarTela(GroupBox_DiretoDaVinci);
+end;
+
+procedure TfrmPrincipal.Button2Click(Sender: TObject);
+begin
+  MudarTela(GroupBox_Baixador);
+end;
+
+procedure TfrmPrincipal.MenuItem31Click(Sender: TObject);
+begin
+  MudarTela(GroupBox_Sobre);
 end;
 
 end.

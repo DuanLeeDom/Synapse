@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  ExtCtrls, Process;
+  ExtCtrls, Process, Unix;
 
 type
   { TForm_Setup }
@@ -14,6 +14,7 @@ type
     btn_instalar: TButton;
     Button1: TButton;
     GroupBox1: TGroupBox;
+    GroupBox2: TGroupBox;
     lbl_info: TLabel;
     Memo_Log: TMemo;
     ProgressBar1: TProgressBar;
@@ -65,17 +66,21 @@ begin
 end;
 
 function TForm_Setup.ProgramaExiste(NomeBinario: string): Boolean;
-var
-  S: string;
+  // S: string;
 begin
   // Uso do 'command -v' para encontrar o programa em qualquer lugar do sistema
-  Result := RunCommand('/usr/bin/bash', ['-c', 'command -v ' + NomeBinario], S);
+  // Result := RunCommand('/usr/bin/bash', ['-c', 'command -v ' + NomeBinario], S);
+  Result := fpSystem('which' + NomeBinario + '> /dev/null 2>&1') = 0;
 end;
 
 function TForm_Setup.VerificarAmbiente: Boolean;
 begin
   IdentificarSistema;
-  Result := ProgramaExiste('yt-dlp') and ProgramaExiste('ffmpeg');
+  // Retorna TRUE se ambos os comandos existirem (retorno 0)
+  // Retorna FALSE se faltar qualquer um deles
+  Result := (fpSystem('which yt-dlp > /dev/null 2>&1') = 0) and
+            (fpSystem('which ffmpeg > /dev/null 2>&1') = 0);
+  // Result := ProgramaExiste('yt-dlp') and ProgramaExiste('ffmpeg');
 end;
 
 procedure TForm_Setup.btn_instalarClick(Sender: TObject);

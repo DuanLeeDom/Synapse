@@ -7,7 +7,7 @@ uses
   cthreads,
   {$ENDIF}
   Interfaces,
-  Forms,
+  Forms, runtimetypeinfocontrols,
   Unit1,
   Unit_Setup;
 
@@ -15,10 +15,10 @@ uses
 
 begin
   RequireDerivedFormResource := True;
-  Application.Title:='DaVinci Resolve - Media Prep Tool';
+  Application.Title:='Synapse';
   Application.Scaled:=True;
   Application.Initialize;
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TfrmPrincipal, frmPrincipal);
   Application.CreateForm(TForm_Setup, Form_Setup);
   Application.Run;
 end.

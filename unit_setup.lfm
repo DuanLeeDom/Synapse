@@ -1,7 +1,7 @@
 object Form_Setup: TForm_Setup
-  Left = 500
+  Left = 753
   Height = 482
-  Top = 250
+  Top = 290
   Width = 407
   BorderStyle = bsDialog
   Caption = 'Configuração do Sistema'
@@ -9,66 +9,90 @@ object Form_Setup: TForm_Setup
   ClientWidth = 407
   Position = poScreenCenter
   LCLVersion = '4.4.0.0'
-  object lbl_info: TLabel
+  object GroupBox2: TGroupBox
     Left = 20
-    Height = 124
+    Height = 442
     Top = 20
-    Width = 360
-    AutoSize = False
-    BidiMode = bdRightToLeftNoAlign
-    Caption = 'Aguarde um momento.'#10#10'Estamos verificando atualizações e instalando as dependências necessárias para o funcionamento completo do programa.'#10'Esse processo pode levar alguns minutos. Por favor, aguarde.'
-    ParentBidiMode = False
-    ParentColor = False
-    WordWrap = True
-  end
-  object ProgressBar1: TProgressBar
-    Left = 20
-    Height = 10
-    Top = 328
-    Width = 360
+    Width = 367
+    Align = alClient
+    BorderSpacing.Around = 20
+    ClientHeight = 438
+    ClientWidth = 363
     TabOrder = 0
-  end
-  object Memo_Log: TMemo
-    Left = 20
-    Height = 204
-    Top = 120
-    Width = 360
-    Color = clBlack
-    Font.Color = clSilver
-    Font.Name = 'Courier New'
-    ParentFont = False
-    ReadOnly = True
-    ScrollBars = ssAutoBoth
-    TabOrder = 1
-  end
-  object GroupBox1: TGroupBox
-    Left = 0
-    Height = 100
-    Top = 384
-    Width = 407
-    Anchors = [akTop, akLeft, akRight, akBottom]
-    BorderSpacing.Around = 15
-    ClientHeight = 91
-    ClientWidth = 401
-    TabOrder = 2
-    object Button1: TButton
-      Left = 24
-      Height = 33
-      Top = 32
-      Width = 115
-      Caption = 'Cancelar'
+    object lbl_info: TLabel
+      Left = 5
+      Height = 124
+      Top = 5
+      Width = 353
+      Align = alTop
+      AutoSize = False
+      BidiMode = bdRightToLeftNoAlign
+      BorderSpacing.Around = 5
+      Caption = 'Aguarde um momento.'#10'Estamos verificando atualizações e instalando as dependências necessárias para o funcionamento completo do programa. '#10'Esse processo pode levar alguns minutos. Por favor, aguarde.'
+      Font.Height = -13
+      Font.Name = 'Sans'
+      ParentBidiMode = False
+      ParentColor = False
+      ParentFont = False
+      WordWrap = True
+    end
+    object ProgressBar1: TProgressBar
+      Left = 5
+      Height = 20
+      Top = 363
+      Width = 353
+      Align = alTop
+      BorderSpacing.Around = 5
       TabOrder = 0
     end
-    object btn_instalar: TButton
-      Left = 256
-      Height = 33
-      Top = 32
-      Width = 115
-      Caption = 'INSTALAR'
-      Font.Style = [fsBold]
+    object Memo_Log: TMemo
+      Left = 15
+      Height = 204
+      Top = 144
+      Width = 333
+      Align = alTop
+      BorderSpacing.Around = 15
+      Color = clBlack
+      Font.Color = clSilver
+      Font.Height = -15
+      Font.Name = 'Sans'
       ParentFont = False
+      ReadOnly = True
+      ScrollBars = ssAutoBoth
       TabOrder = 1
-      OnClick = btn_instalarClick
+    end
+    object GroupBox1: TGroupBox
+      Left = 0
+      Height = 54
+      Top = 384
+      Width = 363
+      Align = alBottom
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      BorderSpacing.Top = 20
+      ClientHeight = 50
+      ClientWidth = 359
+      TabOrder = 2
+      object Button1: TButton
+        Left = 0
+        Height = 50
+        Top = 0
+        Width = 115
+        Align = alLeft
+        Caption = 'Cancelar'
+        TabOrder = 0
+      end
+      object btn_instalar: TButton
+        Left = 244
+        Height = 50
+        Top = 0
+        Width = 115
+        Align = alRight
+        Caption = 'INSTALAR'
+        Font.Style = [fsBold]
+        ParentFont = False
+        TabOrder = 1
+        OnClick = btn_instalarClick
+      end
     end
   end
 end
