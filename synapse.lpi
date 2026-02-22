@@ -33,7 +33,7 @@
     </RequiredPackages>
     <Units>
       <Unit>
-        <Filename Value="project1.lpr"/>
+        <Filename Value="synapse.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -62,7 +62,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="project1"/>
+      <Filename Value="synapse"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>

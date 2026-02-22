@@ -1,4 +1,4 @@
-program project1;
+program synapse;
 
 {$mode objfpc}{$H+}
 

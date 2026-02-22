@@ -5,11 +5,11 @@
     <BuildModes Active="Default"/>
     <Units>
       <Unit>
-        <Filename Value="project1.lpr"/>
+        <Filename Value="synapse.lpr"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="3"/>
         <TopLine Value="5"/>
-        <CursorPos X="29" Y="19"/>
+        <CursorPos X="59" Y="20"/>
         <UsageCount Value="75"/>
         <Loaded Value="True"/>
       </Unit>
@@ -21,8 +21,8 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uMain"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="299"/>
-        <CursorPos X="83" Y="308"/>
+        <TopLine Value="243"/>
+        <CursorPos X="40" Y="254"/>
         <UsageCount Value="75"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -35,7 +35,7 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uSetup"/>
         <EditorIndex Value="2"/>
-        <CursorPos X="40" Y="16"/>
+        <CursorPos X="43" Y="13"/>
         <UsageCount Value="75"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -46,7 +46,7 @@
         <UnitName Value="uDependencyManager"/>
         <EditorIndex Value="1"/>
         <TopLine Value="91"/>
-        <CursorPos X="37" Y="101"/>
+        <CursorPos X="26" Y="103"/>
         <UsageCount Value="50"/>
         <Loaded Value="True"/>
       </Unit>
@@ -90,10 +90,6 @@
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="29">
-      <Position>
-        <Filename Value="umain.pas"/>
-        <Caret Line="283" Column="49" TopLine="267"/>
-      </Position>
       <Position>
         <Filename Value="umain.pas"/>
         <Caret Line="339" Column="63" TopLine="316"/>
@@ -209,6 +205,10 @@
       <Position>
         <Filename Value="umain.pas"/>
         <Caret Line="389" Column="61" TopLine="374"/>
+      </Position>
+      <Position>
+        <Filename Value="synapse.lpr"/>
+        <Caret Line="14" Column="48"/>
       </Position>
     </JumpHistory>
     <RunParams>
