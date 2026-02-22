@@ -7,9 +7,10 @@ uses
   cthreads,
   {$ENDIF}
   Interfaces,
-  Forms, runtimetypeinfocontrols,
-  Unit1,
-  Unit_Setup;
+  Forms, Controls, runtimetypeinfocontrols,
+  uMain,
+  uSetup,
+  uDependencyManager;
 
 {$R *.res}
 
@@ -18,7 +19,20 @@ begin
   Application.Title:='Synapse';
   Application.Scaled:=True;
   Application.Initialize;
+
+  {
+  if not TDependencyManager.VerificarTudo then
+  begin
+    Application.CreateForm(TfrmSetup, frmSetup);
+    if frmSetup.ShowModal <> mrOk then
+    begin
+      Application.Terminate;
+      Exit;
+    end;
+  end;
+  }
+
   Application.CreateForm(TfrmPrincipal, frmPrincipal);
-  Application.CreateForm(TForm_Setup, Form_Setup);
+  Application.CreateForm(TfrmSetup, frmSetup);
   Application.Run;
 end.

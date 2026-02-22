@@ -37,20 +37,25 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="unit1.pas"/>
+        <Filename Value="umain.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmPrincipal"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="Unit1"/>
+        <UnitName Value="uMain"/>
       </Unit>
       <Unit>
-        <Filename Value="unit_setup.pas"/>
+        <Filename Value="usetup.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="Form_Setup"/>
+        <ComponentName Value="frmSetup"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="Unit_Setup"/>
+        <UnitName Value="uSetup"/>
+      </Unit>
+      <Unit>
+        <Filename Value="udependencymanager.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uDependencyManager"/>
       </Unit>
     </Units>
   </ProjectOptions>
