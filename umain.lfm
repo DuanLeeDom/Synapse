@@ -681,25 +681,25 @@ object frmPrincipal: TfrmPrincipal
     BorderSpacing.Left = 5
     BorderSpacing.Right = 5
     BorderSpacing.Around = 20
-    ClientHeight = 578
+    ClientHeight = 561
     ClientWidth = 897
     TabOrder = 2
     object GroupBox3: TGroupBox
       Left = 0
-      Height = 578
+      Height = 561
       Top = 0
       Width = 897
       Align = alClient
-      ClientHeight = 575
+      ClientHeight = 541
       ClientWidth = 893
       TabOrder = 0
       object GroupBox2: TGroupBox
         Left = 546
-        Height = 498
-        Top = 77
+        Height = 469
+        Top = 72
         Width = 347
         Align = alRight
-        ClientHeight = 495
+        ClientHeight = 449
         ClientWidth = 343
         TabOrder = 0
         object Image1: TImage
@@ -1457,7 +1457,7 @@ object frmPrincipal: TfrmPrincipal
         end
         object Label6: TLabel
           Left = 20
-          Height = 37
+          Height = 32
           Top = 296
           Width = 303
           Align = alTop
@@ -1473,16 +1473,16 @@ object frmPrincipal: TfrmPrincipal
       end
       object GroupBox1: TGroupBox
         Left = 0
-        Height = 498
-        Top = 77
+        Height = 469
+        Top = 72
         Width = 546
         Align = alClient
-        ClientHeight = 495
+        ClientHeight = 449
         ClientWidth = 542
         TabOrder = 1
         object lbl_info: TLabel
           Left = 20
-          Height = 455
+          Height = 409
           Top = 20
           Width = 502
           Align = alClient
@@ -1501,7 +1501,7 @@ object frmPrincipal: TfrmPrincipal
       end
       object Label5: TLabel
         Left = 20
-        Height = 37
+        Height = 32
         Top = 20
         Width = 853
         Align = alTop
@@ -1524,7 +1524,7 @@ object frmPrincipal: TfrmPrincipal
     Align = alTop
     BorderSpacing.Left = 5
     BorderSpacing.Right = 5
-    ClientHeight = 77
+    ClientHeight = 60
     ClientWidth = 937
     ParentBackground = False
     ParentBidiMode = False
@@ -1532,7 +1532,7 @@ object frmPrincipal: TfrmPrincipal
     TabOrder = 0
     object btn_DiretoDaVinci: TButton
       Left = 5
-      Height = 77
+      Height = 60
       Top = 0
       Width = 144
       Align = alLeft
@@ -1544,7 +1544,7 @@ object frmPrincipal: TfrmPrincipal
     end
     object btn_Baixador: TButton
       Left = 154
-      Height = 77
+      Height = 60
       Top = 0
       Width = 96
       Align = alLeft
@@ -1556,7 +1556,7 @@ object frmPrincipal: TfrmPrincipal
     end
     object Button3: TButton
       Left = 255
-      Height = 77
+      Height = 60
       Top = 0
       Width = 96
       Align = alLeft
@@ -1567,7 +1567,7 @@ object frmPrincipal: TfrmPrincipal
     end
     object Button4: TButton
       Left = 836
-      Height = 77
+      Height = 60
       Top = 0
       Width = 96
       Align = alRight
@@ -1578,7 +1578,7 @@ object frmPrincipal: TfrmPrincipal
     end
     object Button5: TButton
       Left = 767
-      Height = 77
+      Height = 60
       Top = 0
       Width = 64
       Align = alRight
@@ -1589,7 +1589,7 @@ object frmPrincipal: TfrmPrincipal
     end
     object Button6: TButton
       Left = 698
-      Height = 77
+      Height = 60
       Top = 0
       Width = 64
       Align = alRight
@@ -1600,7 +1600,7 @@ object frmPrincipal: TfrmPrincipal
     end
     object Button7: TButton
       Left = 597
-      Height = 77
+      Height = 60
       Top = 0
       Width = 96
       Align = alRight
@@ -1611,7 +1611,7 @@ object frmPrincipal: TfrmPrincipal
     end
     object Button8: TButton
       Left = 356
-      Height = 77
+      Height = 60
       Top = 0
       Width = 96
       Align = alLeft
@@ -1632,7 +1632,7 @@ object frmPrincipal: TfrmPrincipal
     BorderSpacing.Right = 5
     BorderSpacing.Around = 20
     Caption = 'Baixador'
-    ClientHeight = 552
+    ClientHeight = 561
     ClientWidth = 897
     TabOrder = 1
     object GroupBox_Source1: TGroupBox
@@ -1643,12 +1643,12 @@ object frmPrincipal: TfrmPrincipal
       Align = alTop
       BorderSpacing.Around = 15
       Caption = ' 1. Configurações de Origem '
-      ClientHeight = 51
+      ClientHeight = 60
       ClientWidth = 863
       TabOrder = 0
       object Label3: TLabel
         Left = 0
-        Height = 18
+        Height = 15
         Top = 0
         Width = 863
         Align = alTop
@@ -1657,8 +1657,8 @@ object frmPrincipal: TfrmPrincipal
       end
       object DirectoryEdit1: TDirectoryEdit
         Left = 0
-        Height = 33
-        Top = 18
+        Height = 45
+        Top = 15
         Width = 560
         ShowHidden = False
         ButtonWidth = 23
@@ -1676,12 +1676,12 @@ object frmPrincipal: TfrmPrincipal
       Align = alTop
       BorderSpacing.Around = 15
       Caption = '2. URL para baixar o arquivo desejado'
-      ClientHeight = 51
+      ClientHeight = 60
       ClientWidth = 863
       TabOrder = 1
       object Label4: TLabel
         Left = 0
-        Height = 18
+        Height = 15
         Top = 0
         Width = 863
         Align = alTop
@@ -1690,8 +1690,8 @@ object frmPrincipal: TfrmPrincipal
       end
       object url_web1: TEdit
         Left = 0
-        Height = 33
-        Top = 18
+        Height = 45
+        Top = 15
         Width = 560
         Align = alLeft
         TabOrder = 0
@@ -1699,29 +1699,29 @@ object frmPrincipal: TfrmPrincipal
       end
       object ComboBox_Formatos: TComboBox
         Left = 560
-        Height = 33
-        Top = 18
+        Height = 23
+        Top = 15
         Width = 240
         Align = alLeft
-        ItemHeight = 24
+        ItemHeight = 15
         Style = csDropDownList
         TabOrder = 1
       end
     end
     object GroupBox_Console1: TGroupBox
       Left = 15
-      Height = 268
+      Height = 277
       Top = 205
       Width = 867
       Align = alClient
       BorderSpacing.Around = 15
       Caption = ' Console / Status '
-      ClientHeight = 239
+      ClientHeight = 257
       ClientWidth = 863
       TabOrder = 2
       object Memo_visual_console1: TMemo
         Left = 0
-        Height = 239
+        Height = 257
         Top = 0
         Width = 863
         Align = alClient
@@ -1740,16 +1740,16 @@ object frmPrincipal: TfrmPrincipal
     object GroupBox_Options1: TGroupBox
       Left = 15
       Height = 49
-      Top = 488
+      Top = 497
       Width = 867
       Align = alBottom
       BorderSpacing.Around = 15
-      ClientHeight = 46
+      ClientHeight = 29
       ClientWidth = 863
       TabOrder = 3
       object button_process1: TButton
         Left = 613
-        Height = 46
+        Height = 29
         Top = 0
         Width = 250
         Align = alRight
@@ -1774,7 +1774,7 @@ object frmPrincipal: TfrmPrincipal
     BorderSpacing.Right = 5
     BorderSpacing.Around = 20
     Caption = 'Direto Davinci'
-    ClientHeight = 552
+    ClientHeight = 561
     ClientWidth = 897
     ParentBidiMode = False
     TabOrder = 3
@@ -1786,14 +1786,14 @@ object frmPrincipal: TfrmPrincipal
       Align = alTop
       BorderSpacing.Around = 15
       Caption = ' 1. Configurações de Origem '
-      ClientHeight = 51
+      ClientHeight = 60
       ClientWidth = 863
       ParentBackground = False
       ParentColor = False
       TabOrder = 0
       object Label9: TLabel
         Left = 0
-        Height = 18
+        Height = 15
         Top = 0
         Width = 863
         Align = alTop
@@ -1802,8 +1802,8 @@ object frmPrincipal: TfrmPrincipal
       end
       object DirectoryEdit: TDirectoryEdit
         Left = 5
-        Height = 33
-        Top = 18
+        Height = 45
+        Top = 15
         Width = 560
         ShowHidden = False
         ButtonWidth = 23
@@ -1823,12 +1823,12 @@ object frmPrincipal: TfrmPrincipal
       Align = alTop
       BorderSpacing.Around = 15
       Caption = ' 2. Formato de Conversão para DaVinci '
-      ClientHeight = 51
+      ClientHeight = 60
       ClientWidth = 863
       TabOrder = 1
       object Label10: TLabel
         Left = 0
-        Height = 18
+        Height = 15
         Top = 0
         Width = 863
         Align = alTop
@@ -1837,8 +1837,8 @@ object frmPrincipal: TfrmPrincipal
       end
       object url_web: TEdit
         Left = 5
-        Height = 33
-        Top = 18
+        Height = 45
+        Top = 15
         Width = 299
         Align = alLeft
         BorderSpacing.Left = 5
@@ -1848,55 +1848,55 @@ object frmPrincipal: TfrmPrincipal
       end
       object ComboBox_options: TComboBox
         Left = 579
-        Height = 33
-        Top = 18
+        Height = 23
+        Top = 15
         Width = 279
         Align = alLeft
         BorderSpacing.Left = 5
         BorderSpacing.Right = 5
-        ItemHeight = 24
+        ItemHeight = 15
         Style = csDropDownList
         TabOrder = 1
       end
       object ComboBox_Format_Videos: TComboBox
         Left = 309
-        Height = 33
-        Top = 18
+        Height = 23
+        Top = 15
         Width = 130
         Align = alLeft
         BorderSpacing.Left = 5
         BorderSpacing.Right = 5
-        ItemHeight = 24
+        ItemHeight = 15
         Style = csDropDownList
         TabOrder = 2
       end
       object ComboBox_Format_Audios: TComboBox
         Left = 444
-        Height = 33
-        Top = 18
+        Height = 23
+        Top = 15
         Width = 130
         Align = alLeft
         BorderSpacing.Left = 5
         BorderSpacing.Right = 5
-        ItemHeight = 24
+        ItemHeight = 15
         Style = csDropDownList
         TabOrder = 3
       end
     end
     object GroupBox_Console2: TGroupBox
       Left = 15
-      Height = 173
+      Height = 182
       Top = 300
       Width = 867
       Align = alClient
       BorderSpacing.Around = 15
       Caption = ' Console / Status '
-      ClientHeight = 144
+      ClientHeight = 162
       ClientWidth = 863
       TabOrder = 2
       object Memo_visual_console: TMemo
         Left = 0
-        Height = 124
+        Height = 142
         Top = 0
         Width = 863
         Align = alClient
@@ -1914,7 +1914,7 @@ object frmPrincipal: TfrmPrincipal
       object pbar_console: TProgressBar
         Left = 0
         Height = 20
-        Top = 124
+        Top = 142
         Width = 863
         Align = alBottom
         TabOrder = 1
@@ -1923,16 +1923,16 @@ object frmPrincipal: TfrmPrincipal
     object GroupBox_Options2: TGroupBox
       Left = 15
       Height = 49
-      Top = 488
+      Top = 497
       Width = 867
       Align = alBottom
       BorderSpacing.Around = 15
-      ClientHeight = 46
+      ClientHeight = 29
       ClientWidth = 863
       TabOrder = 3
       object button_process_DiretoDaVinci: TButton
         Left = 613
-        Height = 46
+        Height = 29
         Top = 0
         Width = 250
         Align = alRight
@@ -1953,12 +1953,12 @@ object frmPrincipal: TfrmPrincipal
       Align = alTop
       BorderSpacing.Around = 15
       Caption = ' 2. Formato de Conversão para DaVinci '
-      ClientHeight = 51
+      ClientHeight = 60
       ClientWidth = 863
       TabOrder = 4
       object Label11: TLabel
         Left = 0
-        Height = 18
+        Height = 15
         Top = 0
         Width = 863
         Align = alTop
@@ -1966,9 +1966,9 @@ object frmPrincipal: TfrmPrincipal
         ParentColor = False
       end
       object edt_definir: TEdit
-        Left = 222
-        Height = 33
-        Top = 18
+        Left = 186
+        Height = 45
+        Top = 15
         Width = 338
         Align = alLeft
         BorderSpacing.Left = 5
@@ -1977,10 +1977,10 @@ object frmPrincipal: TfrmPrincipal
         TextHint = 'Ex: name.mov'
       end
       object rbtm_ytdlp: TRadioButton
-        Left = 78
-        Height = 33
-        Top = 18
-        Width = 67
+        Left = 65
+        Height = 45
+        Top = 15
+        Width = 58
         Align = alLeft
         BorderSpacing.Left = 5
         BorderSpacing.Right = 5
@@ -1988,10 +1988,10 @@ object frmPrincipal: TfrmPrincipal
         TabOrder = 1
       end
       object rbtm_definir: TRadioButton
-        Left = 150
-        Height = 33
-        Top = 18
-        Width = 67
+        Left = 128
+        Height = 45
+        Top = 15
+        Width = 53
         Align = alLeft
         BorderSpacing.Left = 5
         BorderSpacing.Right = 5
@@ -2000,9 +2000,9 @@ object frmPrincipal: TfrmPrincipal
       end
       object rbtm_padrao: TRadioButton
         Left = 5
-        Height = 33
-        Top = 18
-        Width = 68
+        Height = 45
+        Top = 15
+        Width = 55
         Align = alLeft
         BorderSpacing.Left = 5
         BorderSpacing.Right = 5

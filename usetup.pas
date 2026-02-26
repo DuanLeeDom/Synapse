@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  ExtCtrls, Process, Unix;
+  ExtCtrls, Process;
 
 type
   { TfrmSetup }
@@ -76,7 +76,7 @@ function TfrmSetup.ProgramaExiste(NomeBinario: string): Boolean;
 begin
   // CORREÇÃO: Adicionado espaço após o 'which '
   // O retorno 0 significa sucesso (encontrou o programa)
-  Result := fpSystem('which ' + NomeBinario + ' > /dev/null 2>&1') = 0;
+  //Result := fpSystem('which ' + NomeBinario + ' > /dev/null 2>&1') = 0;
 end;
 
 function TfrmSetup.VerificarAmbiente: Boolean;

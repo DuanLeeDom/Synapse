@@ -10,7 +10,6 @@
       <UseXPManifest Value="True"/>
       <XPManifest>
         <DpiAware Value="True"/>
-        <UIAccess Value="True"/>
       </XPManifest>
     </General>
     <BuildModes>
@@ -66,7 +65,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <Libraries Value="/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/"/>
+      <Libraries Value="/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

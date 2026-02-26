@@ -7,7 +7,13 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, EditBtn,
   Menus, ExtCtrls, RTTICtrls, Process, uDependencyManager, LCLIntf, LMessages,
-  LCLType, ComCtrls;
+  LCLType, ComCtrls, uSetup,
+  {$IFDEF UNIX}
+  Unix,
+  {$ENDIF}
+  {$IFDEF WINDOWS}
+  Windows;
+  {$ENDIF}
 
 type
   { TfrmPrincipal }
@@ -125,6 +131,14 @@ implementation
 
 {$R *.lfm}
 
+{$IFDEF WINDOWS}
+  const BIN_YTDLP = 'yt-dlp.exe';
+  const BIN_FFMPEG = 'ffmpeg.exe';
+{$ELSE}
+  const BIN_YTDLP = 'yt-dlp';
+  const BIN_FFMPEG = 'ffmpeg';
+{$ENDIF}
+
 { TfrmPrincipal }
 
 procedure TfrmPrincipal.FormCreate(Sender: TObject);
@@ -182,6 +196,8 @@ begin
 end;
 
 procedure TfrmPrincipal.ConfigurarInterface;
+var
+  PastaDownloads: string;
 begin
   ComboBox_Format_Videos.Items.BeginUpdate;
   try
@@ -237,13 +253,15 @@ begin
     ComboBox_Formatos.Items.EndUpdate;
   end;
 
-  if DirectoryExists(GetEnvironmentVariable('HOME') + '/Downloads') then
-     DirectoryEdit.Directory := GetEnvironmentVariable('HOME') + '/Downloads'
+  PastaDownloads := GetUserDir + 'Downloads';
+
+  // Verificamos se a pasta realmente existe antes de atribuir
+  if DirectoryExists(PastaDownloads) then
+    DirectoryEdit.Directory := PastaDownloads
   else
-     DirectoryEdit.Directory := GetCurrentDir;
+    DirectoryEdit.Directory := GetCurrentDir;
 
   lbl_info.Caption := 'Sistema pronto para processamento.';
-
   rbtm_padrao.Checked := True;
 end;
 
@@ -326,6 +344,7 @@ begin
     AProcess.Executable := '/usr/bin/bash';
     AProcess.Parameters.Add('-c');
     {$ENDIF}
+
 
     AProcess.Parameters.Add(Cmd);
     AProcess.Options := [poUsePipes, poStderrToOutPut, poNoConsole];

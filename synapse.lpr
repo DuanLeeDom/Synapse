@@ -16,7 +16,7 @@ uses
 
 begin
   RequireDerivedFormResource := True;
-  Application.Title:='Synapse';
+  Application.Title:='DaVinci Resolve - Media Prep Tool';
   Application.Scaled:=True;
   Application.Initialize;
 

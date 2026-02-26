@@ -16,7 +16,7 @@ object frmSetup: TfrmSetup
     Width = 351
     Align = alClient
     BorderSpacing.Around = 20
-    ClientHeight = 442
+    ClientHeight = 425
     ClientWidth = 347
     TabOrder = 0
     object lbl_info: TLabel
@@ -63,18 +63,18 @@ object frmSetup: TfrmSetup
     end
     object GroupBox1: TGroupBox
       Left = 0
-      Height = 58
+      Height = 41
       Top = 384
       Width = 347
       Align = alBottom
       Anchors = [akTop, akLeft, akRight, akBottom]
       BorderSpacing.Top = 20
-      ClientHeight = 55
+      ClientHeight = 21
       ClientWidth = 343
       TabOrder = 2
       object Button1: TButton
         Left = 0
-        Height = 55
+        Height = 21
         Top = 0
         Width = 115
         Align = alLeft
@@ -84,7 +84,7 @@ object frmSetup: TfrmSetup
       end
       object btn_instalar: TButton
         Left = 228
-        Height = 55
+        Height = 21
         Top = 0
         Width = 115
         Align = alRight
