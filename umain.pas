@@ -18,50 +18,46 @@ uses
 type
   { TfrmPrincipal }
   TfrmPrincipal = class(TForm)
-    btn_DiretoDaVinci: TButton;
     btn_Baixador: TButton;
-    Button3: TButton;
-    Button4: TButton;
-    Button5: TButton;
-    Button6: TButton;
-    Button7: TButton;
-    Button8: TButton;
-    button_process1: TButton;
+    btn_DiretoDaVinci: TButton;
+    btn_Conversor: TButton;
+    btn_atividades: TButton;
+    btn_fila: TButton;
+    btn_previa: TButton;
+    btn_predefinidos: TButton;
+    btn_Imagem: TButton;
     button_process_DiretoDaVinci: TButton;
+    button_process_DiretoDaVinci1: TButton;
     ComboBox_Format_Audios: TComboBox;
-    ComboBox_Formatos: TComboBox;
+    ComboBox_Format_Audios1: TComboBox;
     ComboBox_Format_Videos: TComboBox;
+    ComboBox_Format_Videos1: TComboBox;
     ComboBox_options: TComboBox;
-    DirectoryEdit1: TDirectoryEdit;
     DirectoryEdit: TDirectoryEdit;
+    DirectoryEdit1: TDirectoryEdit;
     edt_definir: TEdit;
-    GroupBox1: TGroupBox;
-    GroupBox2: TGroupBox;
-    GroupBox3: TGroupBox;
-    GroupBox_Console2: TGroupBox;
-    GroupBox_DiretoDaVinci: TGroupBox;
-    GroupBox_Export2: TGroupBox;
-    GroupBox_Export3: TGroupBox;
+    edt_definir1: TEdit;
+    grp_console1: TGroupBox;
+    grp_convertionFormate1: TGroupBox;
+    grp_definicao: TGroupBox;
+    grp_console: TGroupBox;
+    grp_convertionFormate: TGroupBox;
     GroupBox_Options2: TGroupBox;
-    GroupBox_Sobre: TGroupBox;
-    GroupBox_Console1: TGroupBox;
-    GroupBox_Baixador: TGroupBox;
-    GroupBox_Export1: TGroupBox;
-    GroupBoxPrincipal: TGroupBox;
-    GroupBox_Options1: TGroupBox;
-    GroupBox_Source1: TGroupBox;
-    GroupBox_Source2: TGroupBox;
+    grp_definicao1: TGroupBox;
+    grp_fileConfig: TGroupBox;
+    grp_fileConfig1: TGroupBox;
     Image1: TImage;
     Label10: TLabel;
     Label11: TLabel;
-    Label3: TLabel;
-    Label4: TLabel;
+    Label12: TLabel;
+    Label13: TLabel;
+    Label14: TLabel;
     Label5: TLabel;
     Label6: TLabel;
     Label9: TLabel;
     lbl_info: TLabel;
-    Memo_visual_console1: TMemo;
     Memo_visual_console: TMemo;
+    Memo_visual_console1: TMemo;
     MenuItem1: TMenuItem;
     MenuItem10: TMenuItem;
     MenuItem11: TMenuItem;
@@ -94,25 +90,41 @@ type
     MenuItem8: TMenuItem;
     MenuItem9: TMenuItem;
     mnuPrincipal: TMainMenu;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    Panel3: TPanel;
+    pnl_Sobre_Group: TPanel;
+    pnl_Sobre: TPanel;
+    pbar_console1: TProgressBar;
+    pnl_button: TPanel;
+    pnl_button1: TPanel;
+    pnl_DiretoDaVinci: TPanel;
+    pnl_Baixador: TPanel;
+    pnl_DiretoDaVinci_Group: TPanel;
+    pnl_DiretoDaVinci_Group1: TPanel;
+    pnl_Principal: TPanel;
     pbar_console: TProgressBar;
-    rbtm_ytdlp: TRadioButton;
     rbtm_definir: TRadioButton;
+    rbtm_definir1: TRadioButton;
     rbtm_padrao: TRadioButton;
+    rbtm_padrao1: TRadioButton;
+    rbtm_ytdlp: TRadioButton;
+    rbtm_ytdlp1: TRadioButton;
     Separator1: TMenuItem;
     Separator2: TMenuItem;
     Separator3: TMenuItem;
     Separator4: TMenuItem;
     Separator5: TMenuItem;
     Separator6: TMenuItem;
-    url_web1: TEdit;
     url_web: TEdit;
+    url_web1: TEdit;
     procedure btn_DiretoDaVinciClick(Sender: TObject);
     procedure btn_BaixadorClick(Sender: TObject);
     procedure button_process_DiretoDaVinciClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure MenuItem10Click(Sender: TObject);
     procedure MenuItem31Click(Sender: TObject);
-    procedure MudarTela(Alvo: TGroupBox);
+    procedure MudarTela(Alvo: TPanel);
   private
     FVerificado: Boolean;
     FCancelar: Boolean;
@@ -145,13 +157,14 @@ procedure TfrmPrincipal.FormCreate(Sender: TObject);
 begin
   FVerificado := False;
   ConfigurarInterface;
+  MudarTela(pnl_DiretoDaVinci);
 end;
 
-procedure TfrmPrincipal.MudarTela(Alvo: TGroupBox);
+procedure TfrmPrincipal.MudarTela(Alvo: TPanel);
 begin
-  GroupBox_DiretoDaVinci.Visible := False;
-  GroupBox_Baixador.Visible := False;
-  GroupBox_Sobre.Visible := False;
+  pnl_DiretoDaVinci.Visible := False;
+  pnl_Baixador.Visible := False;
+  pnl_Sobre.Visible := False;
 
   if Assigned(Alvo) then
      Alvo.Visible := True;
@@ -242,17 +255,6 @@ begin
     ComboBox_options.Items.EndUpdate;
   end;
 
-  ComboBox_Formatos.Items.BeginUpdate;
-  try
-    ComboBox_Formatos.Items.Clear;
-    ComboBox_Formatos.Items.Add('MP4 (H.264 + AAC)');  // Index 0
-    ComboBox_Formatos.Items.Add('MKV (Matroska)');     // Index 1
-    ComboBox_Formatos.Items.Add('MP3 (Apenas Áudio)'); // Index 2
-    ComboBox_Formatos.ItemIndex := 0;
-  finally
-    ComboBox_Formatos.Items.EndUpdate;
-  end;
-
   PastaDownloads := GetUserDir + 'Downloads';
 
   // Verificamos se a pasta realmente existe antes de atribuir
@@ -261,7 +263,6 @@ begin
   else
     DirectoryEdit.Directory := GetCurrentDir;
 
-  lbl_info.Caption := 'Sistema pronto para processamento.';
   rbtm_padrao.Checked := True;
 end;
 
@@ -428,17 +429,17 @@ end;
 
 procedure TfrmPrincipal.btn_DiretoDaVinciClick(Sender: TObject);
 begin
-  MudarTela(GroupBox_DiretoDaVinci);
+  MudarTela(pnl_DiretoDaVinci);
 end;
 
 procedure TfrmPrincipal.btn_BaixadorClick(Sender: TObject);
 begin
-  MudarTela(GroupBox_Baixador);
+  MudarTela(pnl_Baixador);
 end;
 
 procedure TfrmPrincipal.MenuItem31Click(Sender: TObject);
 begin
-  MudarTela(GroupBox_Sobre);
+  MudarTela(pnl_Sobre);
 end;
 
 procedure TfrmPrincipal.MenuItem10Click(Sender: TObject);

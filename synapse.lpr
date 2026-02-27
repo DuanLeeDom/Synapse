@@ -20,7 +20,7 @@ begin
   Application.Scaled:=True;
   Application.Initialize;
 
-  {
+  {$IFDEF UNIX}
   if not TDependencyManager.VerificarTudo then
   begin
     Application.CreateForm(TfrmSetup, frmSetup);
@@ -30,7 +30,7 @@ begin
       Exit;
     end;
   end;
-  }
+  {$ENDIF}
 
   Application.CreateForm(TfrmPrincipal, frmPrincipal);
   Application.CreateForm(TfrmSetup, frmSetup);
