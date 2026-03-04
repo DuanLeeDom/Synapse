@@ -56,6 +56,30 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="uDependencyManager"/>
       </Unit>
+      <Unit>
+        <Filename Value="udiretodavinci.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frDiretoDaVinci"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uDiretoDaVinci"/>
+      </Unit>
+      <Unit>
+        <Filename Value="usobre.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frSobre"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uSobre"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ubaixar.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frBaixar"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uBaixar"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -65,7 +89,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <Libraries Value="/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1"/>
+      <Libraries Value="/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
