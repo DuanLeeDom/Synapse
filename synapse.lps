@@ -7,8 +7,9 @@
       <Unit>
         <Filename Value="synapse.lpr"/>
         <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="6"/>
-        <CursorPos X="48" Y="10"/>
+        <CursorPos X="49" Y="17"/>
         <UsageCount Value="106"/>
         <Loaded Value="True"/>
       </Unit>
@@ -19,8 +20,8 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uMain"/>
-        <TopLine Value="2"/>
-        <CursorPos X="44" Y="121"/>
+        <TopLine Value="89"/>
+        <CursorPos X="50" Y="110"/>
         <UsageCount Value="106"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -56,10 +57,9 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uDiretoDaVinci"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="40"/>
-        <CursorPos X="58" Y="51"/>
+        <TopLine Value="41"/>
+        <CursorPos X="56" Y="58"/>
         <UsageCount Value="36"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -72,7 +72,7 @@
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uSobre"/>
         <EditorIndex Value="3"/>
-        <CursorPos X="28" Y="22"/>
+        <CursorPos X="19" Y="29"/>
         <UsageCount Value="36"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -138,7 +138,7 @@
         <DefaultSyntaxHighlighter Value="LFM"/>
       </Unit>
     </Units>
-    <JumpHistory HistoryIndex="29">
+    <JumpHistory HistoryIndex="28">
       <Position>
         <Filename Value="udiretodavinci.pas"/>
         <Caret Line="45" Column="74" TopLine="41"/>
@@ -238,10 +238,6 @@
       <Position>
         <Filename Value="udiretodavinci.pas"/>
         <Caret Line="252" Column="77" TopLine="232"/>
-      </Position>
-      <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="38" Column="79" TopLine="69"/>
       </Position>
       <Position>
         <Filename Value="udiretodavinci.pas"/>
