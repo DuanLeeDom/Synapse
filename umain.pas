@@ -106,9 +106,7 @@ begin
   begin
     FreeAndNil(FFrameAtivo);
   end;
-
   FFrameAtivo := AFrameClass.Create(Self);
-
   FFrameAtivo.Parent := pnl_Conteiner;
   FFrameAtivo.Align := alClient;
   FFrameAtivo.Visible := True;
@@ -133,8 +131,6 @@ procedure TfrmPrincipal.MenuItem10Click(Sender: TObject);
 begin
   Close;
 end;
-
-
 
 
 end.

@@ -1,141 +1,158 @@
 object frDiretoDaVinci: TfrDiretoDaVinci
   Left = 0
-  Height = 643
+  Height = 640
   Top = 0
-  Width = 909
-  ClientHeight = 643
-  ClientWidth = 909
+  Width = 900
+  ClientHeight = 640
+  ClientWidth = 900
   LCLVersion = '4.4.0.0'
   TabOrder = 0
   DesignLeft = 848
   DesignTop = 210
   object pnl_DiretoDaVinci: TPanel
     Left = 0
-    Height = 643
+    Height = 640
     Top = 0
-    Width = 909
+    Width = 900
     Align = alClient
     BevelColor = clNone
     BevelOuter = bvNone
-    ClientHeight = 643
-    ClientWidth = 909
+    ClientHeight = 640
+    ClientWidth = 900
     ParentBackground = False
     ParentColor = False
     TabOrder = 0
     object pnl_DiretoDaVinci_Group: TPanel
       Left = 20
-      Height = 603
+      Height = 600
       Top = 20
-      Width = 869
+      Width = 860
       Align = alClient
       BorderSpacing.Around = 20
       BevelColor = clNone
       BevelOuter = bvNone
-      ClientHeight = 603
-      ClientWidth = 869
+      ClientHeight = 600
+      ClientWidth = 860
       ParentBackground = False
       TabOrder = 0
       object pnl_versionDaVinci: TPanel
         Left = 0
-        Height = 96
+        Height = 88
         Top = 0
-        Width = 869
+        Width = 860
         Align = alTop
         BorderSpacing.Bottom = 5
         BevelOuter = bvNone
-        ClientHeight = 96
-        ClientWidth = 869
+        ClientHeight = 88
+        ClientWidth = 860
         TabOrder = 3
         object GroupBox2: TGroupBox
-          Left = 545
-          Height = 96
+          Left = 536
+          Height = 88
           Top = 0
           Width = 324
           Align = alRight
           Anchors = [akTop, akBottom]
           Caption = 'Definir arquivo final'
-          ClientHeight = 67
+          ClientHeight = 68
           ClientWidth = 320
           TabOrder = 0
           object rbtm_substituir: TRadioButton
-            Left = 16
-            Height = 22
-            Top = 24
-            Width = 84
+            Left = 128
+            Height = 19
+            Top = 32
+            Width = 68
             Caption = 'Substituir'
-            Checked = True
             TabOrder = 0
-            TabStop = True
           end
           object Label13: TLabel
             Left = 16
-            Height = 18
-            Top = 0
-            Width = 101
+            Height = 15
+            Top = 8
+            Width = 88
             Caption = 'Escolha o modo:'
           end
           object rbtm_naoSubstituir: TRadioButton
-            Left = 144
-            Height = 22
-            Top = 24
-            Width = 112
+            Left = 16
+            Height = 19
+            Top = 32
+            Width = 92
             Caption = 'Não substituir'
+            Checked = True
             TabOrder = 1
+            TabStop = True
           end
         end
         object GroupBox1: TGroupBox
           Left = 0
-          Height = 96
+          Height = 88
           Top = 0
           Width = 520
           Align = alLeft
           Caption = 'Escolha sua versão de Editor de Video'
-          ClientHeight = 67
+          ClientHeight = 68
           ClientWidth = 516
           TabOrder = 1
+          object rbtm_optionDaVinci_02: TRadioButton
+            Left = 168
+            Height = 19
+            Top = 32
+            Width = 138
+            Caption = 'DaVinci Resolve Studio'
+            TabOrder = 0
+          end
+          object rbtm_optionDaVinci_01: TRadioButton
+            Left = 21
+            Height = 19
+            Top = 32
+            Width = 126
+            Caption = 'DaVinci Resolve Free'
+            Checked = True
+            TabOrder = 1
+            TabStop = True
+          end
           object Label12: TLabel
             Left = 21
-            Height = 18
-            Top = 0
-            Width = 168
+            Height = 15
+            Top = 8
+            Width = 145
             Caption = 'Selecione o editor de video:'
           end
           object cbx_option_video_editor: TComboBoxEx
-            Left = 21
-            Height = 32
-            Top = 22
-            Width = 281
+            Left = 208
+            Height = 22
+            Top = 0
+            Width = 212
             Images = imgl_options_edit
             ItemHeight = 16
             ItemsEx = <>
-            TabOrder = 0
-            OnChange = cbx_option_video_editorChange
+            TabOrder = 2
           end
         end
       end
       object grp_convertionFormate: TGroupBox
         Left = 0
-        Height = 110
-        Top = 215
-        Width = 869
+        Height = 94
+        Top = 194
+        Width = 860
         Align = alTop
         BorderSpacing.Top = 15
         BorderSpacing.Bottom = 5
         Caption = '3. Formato de Conversão para DaVinci '
-        ClientHeight = 81
-        ClientWidth = 865
+        ClientHeight = 74
+        ClientWidth = 856
         ParentBackground = False
         TabOrder = 0
         object Label10: TLabel
           Left = 24
-          Height = 18
+          Height = 15
           Top = 16
-          Width = 143
+          Width = 126
           Caption = 'URL do Video ou Áudio:'
         end
         object url_web: TEdit
           Left = 24
-          Height = 32
+          Height = 23
           Top = 34
           Width = 427
           BorderSpacing.Right = 5
@@ -144,65 +161,65 @@ object frDiretoDaVinci: TfrDiretoDaVinci
         end
         object ComboBox_Format_Videos: TComboBox
           Left = 472
-          Height = 32
-          Top = 2
+          Height = 23
+          Top = 8
           Width = 176
           BorderSpacing.Left = 5
           BorderSpacing.Right = 5
-          ItemHeight = 24
+          ItemHeight = 15
           Style = csDropDownList
           TabOrder = 1
         end
         object ComboBox_Format_Audios: TComboBox
           Left = 672
-          Height = 32
-          Top = 2
+          Height = 23
+          Top = 8
           Width = 160
           BorderSpacing.Left = 5
           BorderSpacing.Right = 5
-          ItemHeight = 24
+          ItemHeight = 15
           Style = csDropDownList
           TabOrder = 2
         end
         object ComboBox_options: TComboBox
           Left = 472
-          Height = 32
-          Top = 40
+          Height = 23
+          Top = 34
           Width = 360
           BorderSpacing.Left = 5
           BorderSpacing.Right = 5
-          ItemHeight = 24
+          ItemHeight = 15
           Style = csDropDownList
           TabOrder = 3
           OnChange = ComboBox_optionsChange
         end
         object chk_Oversample: TCheckBox
-          Left = 328
-          Height = 22
+          Left = 352
+          Height = 19
           Top = 8
-          Width = 98
+          Width = 81
           Caption = 'Oversample'
           TabOrder = 4
         end
       end
       object grp_console: TGroupBox
         Left = 0
-        Height = 94
-        Top = 430
-        Width = 869
+        Height = 128
+        Top = 393
+        Width = 860
         Align = alClient
         BorderSpacing.Top = 15
         BorderSpacing.Bottom = 5
         Caption = ' Console / Status '
-        ClientHeight = 65
-        ClientWidth = 865
+        ClientHeight = 108
+        ClientWidth = 856
         ParentBackground = False
         TabOrder = 1
         object Memo_visual_console: TMemo
           Left = 0
-          Height = 65
+          Height = 108
           Top = 0
-          Width = 865
+          Width = 856
           Align = alClient
           Color = clBlack
           Font.Color = clLime
@@ -219,18 +236,18 @@ object frDiretoDaVinci: TfrDiretoDaVinci
       object pnl_button: TPanel
         Left = 0
         Height = 49
-        Top = 539
-        Width = 869
+        Top = 536
+        Width = 860
         Align = alBottom
         BorderSpacing.Top = 15
         BorderSpacing.Bottom = 15
         BevelOuter = bvNone
         ClientHeight = 49
-        ClientWidth = 869
+        ClientWidth = 860
         ParentBackground = False
         TabOrder = 2
         object button_process_DiretoDaVinci: TButton
-          Left = 627
+          Left = 618
           Height = 29
           Top = 20
           Width = 242
@@ -244,7 +261,7 @@ object frDiretoDaVinci: TfrDiretoDaVinci
           OnClick = button_P
         end
         object button_console: TButton
-          Left = 491
+          Left = 482
           Height = 29
           Top = 20
           Width = 136
@@ -257,7 +274,7 @@ object frDiretoDaVinci: TfrDiretoDaVinci
           Left = 0
           Height = 10
           Top = 5
-          Width = 869
+          Width = 860
           Align = alTop
           BorderSpacing.Top = 5
           BorderSpacing.Bottom = 5
@@ -267,32 +284,30 @@ object frDiretoDaVinci: TfrDiretoDaVinci
       object GroupBox4: TGroupBox
         Left = 0
         Height = 85
-        Top = 330
-        Width = 869
+        Top = 293
+        Width = 860
         Align = alTop
         BorderSpacing.Bottom = 5
         Caption = '4. Definir tipo de processamento'
-        ClientHeight = 56
-        ClientWidth = 865
+        ClientHeight = 65
+        ClientWidth = 856
         TabOrder = 4
         object rbtm_process_cpu: TRadioButton
-          Left = 23
+          Left = 24
           Height = 32
-          Top = 0
-          Width = 144
+          Top = 16
+          Width = 120
           AutoSize = False
           BorderSpacing.Left = 10
           BorderSpacing.Right = 10
           Caption = 'CPU / Processador'
-          Checked = True
           TabOrder = 0
-          TabStop = True
         end
         object rbtm_process_gpu: TRadioButton
-          Left = 208
+          Left = 176
           Height = 32
-          Top = 0
-          Width = 160
+          Top = 16
+          Width = 136
           AutoSize = False
           BorderSpacing.Left = 10
           BorderSpacing.Right = 10
@@ -302,40 +317,40 @@ object frDiretoDaVinci: TfrDiretoDaVinci
       end
       object pnl_files_options: TPanel
         Left = 0
-        Height = 99
-        Top = 101
-        Width = 869
+        Height = 86
+        Top = 93
+        Width = 860
         Align = alTop
         BorderSpacing.Bottom = 5
         BevelOuter = bvNone
-        ClientHeight = 99
-        ClientWidth = 869
+        ClientHeight = 86
+        ClientWidth = 860
         TabOrder = 5
         object grp_definicao: TGroupBox
-          Left = 545
-          Height = 99
+          Left = 536
+          Height = 86
           Top = 0
           Width = 324
           Align = alRight
           Caption = '2. Definir nome do arquivo'
-          ClientHeight = 70
+          ClientHeight = 66
           ClientWidth = 320
           ParentBackground = False
           ParentBidiMode = False
           TabOrder = 0
           object Label11: TLabel
             Left = 16
-            Height = 18
+            Height = 15
             Top = 0
-            Width = 226
+            Width = 197
             Caption = 'Escolha o modo de nome de arquivo:'
             ParentColor = False
           end
           object rbtm_padrao: TRadioButton
             Left = 16
-            Height = 22
+            Height = 19
             Top = 24
-            Width = 68
+            Width = 55
             BorderSpacing.Right = 5
             Caption = 'Padrão'
             Checked = True
@@ -343,20 +358,20 @@ object frDiretoDaVinci: TfrDiretoDaVinci
             TabStop = True
           end
           object rbtm_ytdlp: TRadioButton
-            Left = 112
-            Height = 22
+            Left = 96
+            Height = 19
             Top = 24
-            Width = 67
+            Width = 58
             BorderSpacing.Left = 5
             BorderSpacing.Right = 5
             Caption = 'YT-DLP'
             TabOrder = 1
           end
           object rbtm_definir: TRadioButton
-            Left = 208
-            Height = 22
+            Left = 176
+            Height = 19
             Top = 24
-            Width = 67
+            Width = 53
             BorderSpacing.Left = 5
             BorderSpacing.Right = 5
             Caption = 'Definir'
@@ -366,26 +381,26 @@ object frDiretoDaVinci: TfrDiretoDaVinci
         end
         object grp_fileConfig: TGroupBox
           Left = 0
-          Height = 99
+          Height = 86
           Top = 0
           Width = 520
           Align = alLeft
           Caption = '1. Configurações de Origem '
-          ClientHeight = 70
+          ClientHeight = 66
           ClientWidth = 516
           ParentBackground = False
           ParentBidiMode = False
           TabOrder = 1
           object Label9: TLabel
-            Left = 21
-            Height = 18
+            Left = 24
+            Height = 15
             Top = 0
-            Width = 149
+            Width = 129
             Caption = 'Pasta de Destino (Local):'
           end
           object DirectoryEdit: TDirectoryEdit
-            Left = 21
-            Height = 32
+            Left = 19
+            Height = 23
             Top = 24
             Width = 280
             ShowHidden = False
@@ -397,7 +412,7 @@ object frDiretoDaVinci: TfrDiretoDaVinci
           end
           object edt_definir: TEdit
             Left = 312
-            Height = 32
+            Height = 23
             Top = 24
             Width = 192
             BorderSpacing.Left = 5

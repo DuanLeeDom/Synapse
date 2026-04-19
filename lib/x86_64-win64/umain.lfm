@@ -1,13 +1,13 @@
 object frmPrincipal: TfrmPrincipal
   Left = 480
-  Height = 700
-  Top = 200
+  Height = 701
+  Top = 199
   Width = 900
   Caption = 'Synapse'
-  ClientHeight = 700
+  ClientHeight = 701
   ClientWidth = 900
-  Constraints.MinHeight = 700
-  Constraints.MinWidth = 900
+  Constraints.MinHeight = 550
+  Constraints.MinWidth = 500
   Icon.Data = {
     195200000000010001000000000001002000035200001600000089504E470D0A
     1A0A0000000D49484452000001000000010008060000005C72A866000051CA49
@@ -669,7 +669,7 @@ object frmPrincipal: TfrmPrincipal
   }
   Menu = mnuPrincipal
   Position = poScreenCenter
-  LCLVersion = '4.6.0.0'
+  LCLVersion = '4.4.0.0'
   OnCreate = FormCreate
   object pnl_Principal: TPanel
     Left = 0
@@ -773,7 +773,7 @@ object frmPrincipal: TfrmPrincipal
   end
   object pnl_Conteiner: TPanel
     Left = 0
-    Height = 640
+    Height = 641
     Top = 60
     Width = 900
     Align = alClient

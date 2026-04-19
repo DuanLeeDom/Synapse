@@ -80,6 +80,11 @@
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uBaixar"/>
       </Unit>
+      <Unit>
+        <Filename Value="usystemassistant.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uSystemAssistant"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

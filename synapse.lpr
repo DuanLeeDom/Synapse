@@ -10,7 +10,7 @@ uses
   Forms, Controls, runtimetypeinfocontrols,
   uMain,
   uSetup,
-  uDependencyManager, uDiretoDaVinci, uSobre, uBaixar;
+  uDependencyManager, uDiretoDaVinci, uSobre, uBaixar, uSystemAssistant;
 
 {$R *.res}
 

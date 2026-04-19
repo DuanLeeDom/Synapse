@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Compiler Value="/usr/bin/fpc" Date="1714586784"/>
+  <Params Value="-MObjFPC -Scghi -Cg -O1 -gw3 -gl -l -vewnhibq -Fi/home/domcat/Documentos/dev/Synapse/lib/x86_64-linux -Fl/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1 -Fu/home/domcat/Documentos/dev/Synapse/ -Fu/usr/lib/lazarus/components/rtticontrols/lib/x86_64-linux/qt6 -Fu/usr/lib/lazarus/components/ideintf/units/x86_64-linux/qt6 -Fu/usr/lib/lazarus/components/lazcontrols/lib/x86_64-linux/qt6 -Fu/usr/lib/lazarus/lcl/units/x86_64-linux/qt6 -Fu/usr/lib/lazarus/lcl/units/x86_64-linux -Fu/usr/lib/lazarus/components/freetype/lib/x86_64-linux -Fu/usr/lib/lazarus/components/debuggerintf/lib/x86_64-linux -Fu/usr/lib/lazarus/components/buildintf/units/x86_64-linux -Fu/usr/lib/lazarus/components/lazutils/lib/x86_64-linux -Fu/usr/lib/lazarus/components/lazdebuggers/lazdebuggerintf/lib/x86_64-linux -Fu/usr/lib/lazarus/packager/units/x86_64-linux -FU/home/domcat/Documentos/dev/Synapse/lib/x86_64-linux/ -FE/home/domcat/Documentos/dev/Synapse/ -o/home/domcat/Documentos/dev/Synapse/synapse -dLCL -dLCLqt6 synapse.lpr"/>
+</CONFIG>
