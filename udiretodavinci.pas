@@ -93,6 +93,7 @@ type
     procedure cbx_option_video_editorChange(Sender: TObject);
   private
     FCancelar      : Boolean;
+    FControle      : TProcessoControlado;  // substitui FCancelar
     FCurrentProfile: TEditorProfile;
     FCurrentCodecs : TCodecList;
     FAssistant     : TSystemAssistant;  // instância do helper
@@ -135,13 +136,16 @@ constructor TfrDiretoDaVinci.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   Randomize;
-  FAssistant := TSystemAssistant.Create;  // cria a instância
+  FAssistant := TSystemAssistant.Create;
+  FControle := TProcessoControlado.Create(button_process_DiretoDaVinci);
   ConfigurarInterface;
 end;
 
 destructor TfrDiretoDaVinci.Destroy;
 begin
-  FAssistant.Free;  // libera a memória ao fechar
+  FControle.Cancelar;
+  FControle.Free;
+  FAssistant.Free;
   inherited Destroy;
 end;
 
@@ -634,7 +638,7 @@ var
 begin
   if button_process_DiretoDaVinci.Caption = 'Cancelar' then
   begin
-    FCancelar := True;
+    FControle.Cancelar;
     Exit;
   end;
 
@@ -727,9 +731,9 @@ begin
       Fase2_FFmpeg(DirectoryEdit.Directory, ArquivosBaixados,
                    VideoParams, ParamsAudio, ExtFinal, NomePrefixo, DeletarOriginal);
   finally
-    FreeAndNil(ArquivosBaixados);
-    button_process_DiretoDaVinci.Enabled := True;
-    button_process_DiretoDaVinci.Caption := 'PROCESSAR';
+    ArquivosBaixados.Free;
+    ArquivosBaixados := nil;
+    FControle.FinalizarProcesso;
     pbar_console.Position := 100;
   end;
 end;
@@ -767,6 +771,8 @@ begin
     AProcess.Parameters.Add(ACmd);
     AProcess.Options := [poUsePipes, poStderrToOutPut, poNoConsole];
     AProcess.Execute;
+
+    FControle.RegistrarProcesso(AProcess);
 
     while AProcess.Running do
     begin

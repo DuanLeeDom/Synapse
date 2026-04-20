@@ -5,10 +5,33 @@ unit uSystemAssistant;
 interface
 
 uses
-  Classes, SysUtils, Controls, StdCtrls, Graphics, Forms, Types, Process;
+  Classes, SysUtils, Controls, StdCtrls, Graphics, Forms, Types, Process,
+  Buttons;
 
 type
   TGPUVendor = (gpuNone, gpuNVIDIA, gpuAMD, gpuIntel);
+
+  { TProcessoControlado }
+  TProcessoControlado = class
+  private
+    FProcessoAtivo : TProcess;
+    FCancelado     : Boolean;
+    FBotao         : TButton;
+    FLabelProcessar: string;
+    FLabelCancelar : string;
+
+    procedure MatarProcessoFilho;
+  public
+    constructor Create(ABotao: TButton;
+                       const ALabelProcessar: string = 'PROCESSAR';
+                       const ALabelCancelar: string  = 'Cancelar');
+
+    procedure IniciarProcesso;
+    procedure FinalizarProcesso;
+    procedure RegistrarProcesso(AProcesso: TProcess);
+    procedure Cancelar;
+    function EstaCancelado: Boolean;
+  end;
 
   { TSystemAssistant }
 
@@ -27,6 +50,95 @@ type
   end;
 
 implementation
+
+{ TProcessoControlado }
+
+procedure TProcessoControlado.MatarProcessoFilho;
+var
+  Killer: TProcess;
+begin
+  Killer := TProcess.Create(nil);
+  try
+    {$IFDEF WINDOWS}
+    Killer.Executable := 'cmd.exe';
+    Killer.Parameters.Add('/c');
+    Killer.Parameters.Add('taskkill /F /IM ffmpeg.exe /T & taskkill /F /IM yt-dlp.exe /T');
+    {$ELSE}
+    Killer.Executable := '/usr/bin/bash';
+    Killer.Parameters.Add('-c');
+    Killer.Parameters.Add('pkill -9 -f ffmpeg; pkill -9 -f yt-dlp');
+    {$ENDIF}
+    Killer.Options := [poNoConsole, poWaitOnExit];
+  finally
+    Killer.Free;
+  end;
+end;
+
+constructor TProcessoControlado.Create(ABotao: TButton;
+  const ALabelProcessar: string; const ALabelCancelar: string);
+begin
+  inherited Create;
+  FBotao         := ABotao;
+  FLabelProcessar:= ALabelProcessar;
+  FLabelCancelar := ALabelCancelar;
+  FProcessoAtivo := nil;
+  FCancelado     := False;
+end;
+
+procedure TProcessoControlado.IniciarProcesso;
+begin
+  FCancelado := False;
+  if Assigned(FBotao) then
+  begin
+    FBotao.Caption := FLabelCancelar;
+    FBotao.Enabled := True;
+  end;
+end;
+
+procedure TProcessoControlado.FinalizarProcesso;
+begin
+  FProcessoAtivo := nil;
+  FCancelado     := False;
+  if Assigned(FBotao) then
+  begin
+    FBotao.Caption := FLabelProcessar;
+    FBotao.Enabled := True;
+  end;
+end;
+
+procedure TProcessoControlado.RegistrarProcesso(AProcesso: TProcess);
+begin
+  FProcessoAtivo := AProcesso;
+end;
+
+procedure TProcessoControlado.Cancelar;
+var
+  Cmd: string;
+begin
+  FCancelado := True;
+
+  if Assigned(FProcessoAtivo) and FProcessoAtivo.Running then
+  begin
+    try
+      Cmd := 'q';
+      FProcessoAtivo.Input.Write(Cmd[1], Length(Cmd));
+    Except
+    end;
+  end;
+
+  if Assigned(FProcessoAtivo) and FProcessoAtivo.Running then
+  begin
+    FProcessoAtivo.Terminate(1);
+    FProcessoAtivo := nil;
+
+    MatarProcessoFilho;
+  end;
+end;
+
+function TProcessoControlado.EstaCancelado: Boolean;
+begin
+  Result := FCancelado;
+end;
 
 { TSystemAssistant }
 
@@ -96,9 +208,10 @@ begin
   Saida    := TStringList.Create;
   try
     {$IFDEF WINDOWS}
-    Processo.Executable := 'cmd.exe';
-    Processo.Parameters.Add('/c');
-    Processo.Parameters.Add('wmic path win32_VideoController get name');
+    Processo.Executable := 'powershell.exe';
+    Processo.Parameters.Add('-NoProfile');
+    Processo.Parameters.Add('-Command');
+    Processo.Parameters.Add('Get-WmiObject Win32_VideoController | Select-Object -ExpandProperty Name');
     {$ELSE}
     Processo.Executable := '/usr/bin/bash';
     Processo.Parameters.Add('-c');
@@ -110,25 +223,17 @@ begin
 
     Saida.LoadFromStream(Processo.Output);
 
+    // percorre todas as linhas — prioridade: NVIDIA > AMD > Intel
     for i := 0 to Saida.Count - 1 do
     begin
       Linha := LowerCase(Saida[i]);
 
       if Pos('nvidia', Linha) > 0 then
-      begin
-        Result := gpuNVIDIA;
-        Break;
-      end
-      else if Pos('amd', Linha) > 0 then
-      begin
-        Result := gpuAMD;
-        Break;
-      end
-      else if Pos('intel', Linha) > 0 then
-      begin
+        Result := gpuNVIDIA
+      else if (Pos('amd', Linha) > 0) and (Result = gpuNone) then
+        Result := gpuAMD
+      else if (Pos('intel', Linha) > 0) and (Result = gpuNone) then
         Result := gpuIntel;
-        Break;
-      end;
     end;
 
   finally

@@ -1,87 +1,106 @@
 ; ---------------------------------------------------------
-; Synapse Installer - Full Native Downloader & Uninstaller
+; Synapse Installer - Professional Edition
 ; ---------------------------------------------------------
 
 !define APP_NAME "Synapse"
 !define EXE_NAME "synapse.exe"
-!define COMP_NAME "DuanLee_Dev"
-
-; Incluir a interface moderna
-!include "MUI2.nsh"
-
-Name "${APP_NAME}"
-OutFile "Instalador_Synapse_Completo.exe"
-InstallDir "$PROGRAMFILES64\${APP_NAME}"
-RequestExecutionLevel admin
+!define FFMPEG_DIR "ffmpeg-8.1-essentials_build"
+!define COMP_NAME "Duan Lee"
+!define WEB_SITE "https://github.com/duanleedom" ; Seu GitHub ou Site
 
 ; --- Configurações de Interface ---
-!insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_DIRECTORY
+!include "MUI2.nsh"
+!include "LogicLib.nsh"
+
+!define MUI_ABORTWARNING ; Avisa se o usuário tentar fechar o instalador
+!define MUI_ICON "icon.ico" ; Ícone do Instalador
+!define MUI_UNICON "icon.ico" ; Ícone do Desinstalador
+
+; Imagens (Opcional: Comente as linhas abaixo se não tiver os arquivos .bmp ainda)
+!define MUI_WELCOMEFINISHPAGE_BITMAP "welcome.bmp"
+!define MUI_HEADERIMAGE
+!define MUI_HEADERIMAGE_BITMAP "header.bmp"
+
+; --- Páginas do Instalador ---
+!insertmacro MUI_PAGE_WELCOME ; Tela de Boas-vindas
+!insertmacro MUI_PAGE_DIRECTORY ; Escolha da Pasta
+
+; Página de Instalação (com barra de progresso)
 !insertmacro MUI_PAGE_INSTFILES
+
+; Página Final com opção de Executar o Synapse
+!define MUI_FINISHPAGE_RUN "$INSTDIR\${EXE_NAME}"
+!define MUI_FINISHPAGE_RUN_TEXT "Abrir o Synapse agora"
+!define MUI_FINISHPAGE_LINK "Visitar repositório do projeto"
+!define MUI_FINISHPAGE_LINK_LOCATION "${WEB_SITE}"
 !insertmacro MUI_PAGE_FINISH
 
+; --- Páginas do Desinstalador ---
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
 
+; --- Idioma ---
 !insertmacro MUI_LANGUAGE "PortugueseBR"
 
+; --- Informações de Versão e Nome ---
+Name "${APP_NAME}"
+OutFile "synapse_setup.exe"
+InstallDir "$PROGRAMFILES64\${APP_NAME}"
+RequestExecutionLevel admin
+
 ; ---------------------------------------------------------
-; SEÇÃO DE INSTALAÇÃO
+; Seção de Instalação
 ; ---------------------------------------------------------
-Section "Instalar Synapse" SecMain
+Section "Principal" SecMain
     SetOutPath "$INSTDIR"
-    
-    ; 1. Copia o seu executável (Certifique-se que ele está na mesma pasta do script)
+
+    ; 1. Arquivos do Synapse
+    DetailPrint "Instalando binários do Synapse..."
     File "synapse.exe"
-
-    ; 2. Baixar yt-dlp usando PowerShell (Com protocolo de segurança TLS 1.2)
-    DetailPrint "Baixando yt-dlp.exe (Aguarde...)"
-    nsExec::ExecToLog 'powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -OutFile $\"$INSTDIR\yt-dlp.exe$\""'
-
-    ; 3. Baixar e Extrair FFmpeg
-    DetailPrint "Baixando pacote FFmpeg..."
-    nsExec::ExecToLog 'powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -OutFile $\"$INSTDIR\ffmpeg.zip$\""'
     
-    DetailPrint "Extraindo FFmpeg..."
-    nsExec::ExecToLog 'powershell -Command "Expand-Archive -Path $\"$INSTDIR\ffmpeg.zip$\" -DestinationPath $\"$INSTDIR\ffmpeg_temp$\" -Force"'
-    
-    ; Move o executável e limpa o lixo
-    nsExec::ExecToLog 'cmd /c "move /y $\"$INSTDIR\ffmpeg_temp\ffmpeg-*\bin\ffmpeg.exe$\" $\"$INSTDIR\ffmpeg.exe$\""'
-    Delete "$INSTDIR\ffmpeg.zip"
-    RMDir /r "$INSTDIR\ffmpeg_temp"
+    ; 2. FFmpeg (Pasta completa)
+    DetailPrint "Alocando motor FFmpeg no sistema..."
+    File /r "${FFMPEG_DIR}"
 
-    ; 4. Criar Atalhos e Desinstalador
+    ; 3. Configuração do PATH do Windows
+    DetailPrint "Registrando dependências no PATH do Sistema..."
+    ReadRegStr $1 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "Path"
+    
+    ; Verificamos se já existe para evitar duplicidade
+    ${Unless} ${FileExists} "$INSTDIR\${FFMPEG_DIR}\bin"
+        WriteRegExpandStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "Path" "$1;$INSTDIR\${FFMPEG_DIR}\bin"
+        SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
+    ${EndUnless}
+
+    ; 4. Criar o Desinstalador
     WriteUninstaller "$INSTDIR\uninstall.exe"
-    CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${EXE_NAME}"
+
+    ; 5. Atalhos Organizáveis
+    DetailPrint "Criando atalhos..."
+    CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${EXE_NAME}" "" "$INSTDIR\${EXE_NAME}" 0
+    
     CreateDirectory "$SMPROGRAMS\${APP_NAME}"
     CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${EXE_NAME}"
     CreateShortcut "$SMPROGRAMS\${APP_NAME}\Desinstalar.lnk" "$INSTDIR\uninstall.exe"
 
-    ; 5. Registrar no Painel de Controle
+    ; 6. Registro no Painel de Controle (Adicionar Ícone e Tamanho)
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "DisplayName" "${APP_NAME}"
-    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "DisplayIcon" "$INSTDIR\${EXE_NAME}"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "Publisher" "${COMP_NAME}"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
 SectionEnd
 
 ; ---------------------------------------------------------
-; SEÇÃO DE DESINSTALAÇÃO
+; Seção de Desinstalação
 ; ---------------------------------------------------------
 Section "Uninstall"
-    ; Apagar arquivos físicos
-    Delete "$INSTDIR\synapse.exe"
-    Delete "$INSTDIR\yt-dlp.exe"
-    Delete "$INSTDIR\ffmpeg.exe"
-    Delete "$INSTDIR\uninstall.exe"
+    ; Remove arquivos e pastas
+    RMDir /r "$INSTDIR"
     
-    ; Apagar atalhos
+    ; Remove Atalhos
     Delete "$DESKTOP\${APP_NAME}.lnk"
-    Delete "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk"
-    Delete "$SMPROGRAMS\${APP_NAME}\Desinstalar.lnk"
-    RMDir "$SMPROGRAMS\${APP_NAME}"
+    RMDir /r "$SMPROGRAMS\${APP_NAME}"
 
-    ; Remover pasta do programa
-    RMDir "$INSTDIR"
-
-    ; Remover do Registro
+    ; Remove do Registro
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
 SectionEnd
