@@ -2,13 +2,12 @@
 ### The Bridge Between the Web and Your Timeline.
 
 <div style="display: flex; justify-content: space-between; align-items: center;">
-  <img src="/img/capture/Capture_direto_davinci.png" height="300">
-  <img src="/img/capture/Capture_baixar.png" height="300">
+  <img src="/img/capture/Capture_Media_Pipeline.png" height="300">
+  <img src="/img/capture/Capture_Image_Processor.png" height="300">
 </div>
 <div style="display: flex; justify-content: space-between; align-items: center;">
-  <img src="/img/capture/Capture_sobre.png" height="300">
+  <img src="/img/capture/Capture_About_View.png" height="300">
 </div>
-
 
 **Synapse** is an open-source media acquisition and processing tool designed specifically for video editors, content creators, and motion designers. 
 

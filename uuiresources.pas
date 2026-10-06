@@ -1,17 +1,16 @@
-unit uSystemAssistant;
+unit uUIResources;
 
 {$mode ObjFPC}{$H+}
 
 interface
 
 uses
-  Classes, SysUtils, Controls, StdCtrls, Graphics, Forms, Types, Process,
-  Buttons;
+  Classes, SysUtils, Controls, StdCtrls, Graphics, Process, uProcessos;
 
 type
-  TGPUVendor = (gpuNone, gpuNVIDIA, gpuAMD, gpuIntel);
-
-  { TProcessoControlado }
+  { TProcessoControlado
+    Controle de um processo de conversão (yt-dlp/ffmpeg) vinculado a um
+    botão da interface, permitindo cancelamento e rótulos Processar/Cancelar. }
   TProcessoControlado = class
   private
     FProcessoAtivo : TProcess;
@@ -33,8 +32,10 @@ type
     function EstaCancelado: Boolean;
   end;
 
-  { TSystemAssistant }
-
+  { TSystemAssistant
+    Recursos visuais da interface: tooltips de ajuda (ícone ⓘ) e
+    recarga de listas dependentes. (Pesquisa de hardware fica em
+    uHardwareDetector.) }
   TSystemAssistant = class
   private
     function WrapText(AText: string; AMaxChars: Integer = 50): string;
@@ -44,9 +45,6 @@ type
                       AMaxWidth: Integer = 50);
     procedure RecarregarDependentes(
                       const ADependentes: array of TComboBox);
-    function DetectarGPU: TGPUVendor;
-    function ObterParamsGPU(const AVideoParams: string;
-                            AGPUVendor: TGPUVendor): string;
   end;
 
 implementation
@@ -55,23 +53,20 @@ implementation
 
 procedure TProcessoControlado.MatarProcessoFilho;
 var
-  Killer: TProcess;
+  Pid: LongWord;
 begin
-  Killer := TProcess.Create(nil);
-  try
-    {$IFDEF WINDOWS}
-    Killer.Executable := 'cmd.exe';
-    Killer.Parameters.Add('/c');
-    Killer.Parameters.Add('taskkill /F /IM ffmpeg.exe /T & taskkill /F /IM yt-dlp.exe /T');
-    {$ELSE}
-    Killer.Executable := '/usr/bin/bash';
-    Killer.Parameters.Add('-c');
-    Killer.Parameters.Add('pkill -9 -f ffmpeg; pkill -9 -f yt-dlp');
-    {$ENDIF}
-    Killer.Options := [poNoConsole, poWaitOnExit];
-  finally
-    Killer.Free;
-  end;
+  { A versao anterior montava 'taskkill /F /IM ffmpeg.exe /T', que encerrava
+    o ffmpeg de qualquer programa da maquina, inclusive de outros usuarios,
+    e nunca chegou a ser executada. O que e preciso e derrubar a arvore que
+    nasceu deste processo, e nada mais. }
+  if not Assigned(FProcessoAtivo) then
+    Exit;
+
+  Pid := LongWord(FProcessoAtivo.ProcessID);
+  if (Pid = 0) or (Pid = LongWord(GetProcessID)) then
+    Exit;
+
+  TGerenciadorProcessos.EncerrarArvorePorPid(DWORD(Pid));
 end;
 
 constructor TProcessoControlado.Create(ABotao: TButton;
@@ -128,10 +123,12 @@ begin
 
   if Assigned(FProcessoAtivo) and FProcessoAtivo.Running then
   begin
+    { Terminar so o pai deixaria o ffmpeg que ele iniciou rodando e ainda
+      gravando. A arvore e derrubada antes de soltar a referencia, porque
+      depois disso nao haveria mais de onde tirar o PID. }
+    MatarProcessoFilho;
     FProcessoAtivo.Terminate(1);
     FProcessoAtivo := nil;
-
-    MatarProcessoFilho;
   end;
 end;
 
@@ -193,73 +190,6 @@ begin
   begin
     ADependentes[i].Items.Clear;
     ADependentes[i].ItemIndex := -1;
-  end;
-end;
-
-function TSystemAssistant.DetectarGPU: TGPUVendor;
-var
-  Processo: TProcess;
-  Saida   : TStringList;
-  Linha   : string;
-  i       : Integer;
-begin
-  Result   := gpuNone;
-  Processo := TProcess.Create(nil);
-  Saida    := TStringList.Create;
-  try
-    {$IFDEF WINDOWS}
-    Processo.Executable := 'powershell.exe';
-    Processo.Parameters.Add('-NoProfile');
-    Processo.Parameters.Add('-Command');
-    Processo.Parameters.Add('Get-WmiObject Win32_VideoController | Select-Object -ExpandProperty Name');
-    {$ELSE}
-    Processo.Executable := '/usr/bin/bash';
-    Processo.Parameters.Add('-c');
-    Processo.Parameters.Add('lspci | grep -i vga');
-    {$ENDIF}
-
-    Processo.Options := [poUsePipes, poNoConsole, poWaitOnExit];
-    Processo.Execute;
-
-    Saida.LoadFromStream(Processo.Output);
-
-    // percorre todas as linhas — prioridade: NVIDIA > AMD > Intel
-    for i := 0 to Saida.Count - 1 do
-    begin
-      Linha := LowerCase(Saida[i]);
-
-      if Pos('nvidia', Linha) > 0 then
-        Result := gpuNVIDIA
-      else if (Pos('amd', Linha) > 0) and (Result = gpuNone) then
-        Result := gpuAMD
-      else if (Pos('intel', Linha) > 0) and (Result = gpuNone) then
-        Result := gpuIntel;
-    end;
-
-  finally
-    Saida.Free;
-    Processo.Free;
-  end;
-end;
-
-function TSystemAssistant.ObterParamsGPU(const AVideoParams: string;
-  AGPUVendor: TGPUVendor): string;
-begin
-  case AGPUVendor of
-    gpuNVIDIA:
-      Result := StringReplace(AVideoParams, '-c:v libx264',
-                              '-c:v h264_nvenc -preset p4',
-                              [rfIgnoreCase]);
-    gpuAMD:
-      Result := StringReplace(AVideoParams, '-c:v libx264',
-                              '-c:v h264_amf',
-                              [rfIgnoreCase]);
-    gpuIntel:
-      Result := StringReplace(AVideoParams, '-c:v libx264',
-                              '-c:v h264_qsv',
-                              [rfIgnoreCase]);
-  else
-    Result := AVideoParams;
   end;
 end;
 

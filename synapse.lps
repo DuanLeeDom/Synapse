@@ -7,27 +7,158 @@
       <Unit>
         <Filename Value="synapse.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="3"/>
-        <CursorPos X="37" Y="13"/>
+        <EditorIndex Value="9"/>
+        <CursorPos X="21" Y="11"/>
         <UsageCount Value="204"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="umain.pas"/>
+        <Filename Value="umainview.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmPrincipal"/>
+        <ComponentName Value="frmMainView"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="uMain"/>
-        <TopLine Value="97"/>
-        <CursorPos X="45" Y="93"/>
+        <UnitName Value="uMainView"/>
+        <TopLine Value="166"/>
+        <CursorPos X="33" Y="181"/>
         <UsageCount Value="204"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="usetup.pas"/>
+        <Filename Value="udependencymanager.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="uDependencyManager"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="59"/>
+        <CursorPos X="6" Y="63"/>
+        <UsageCount Value="202"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="umediapipeline.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frMediaPipeline"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uMediaPipeline"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="1899"/>
+        <CursorPos X="57" Y="1922"/>
+        <UsageCount Value="41"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uaboutview.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frAboutView"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uAboutView"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="91"/>
+        <CursorPos Y="107"/>
+        <UsageCount Value="200"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="udownloadservice.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frDownloadService"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uDownloadService"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="14"/>
+        <CursorPos X="40" Y="18"/>
+        <UsageCount Value="200"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uuiresources.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uUIResources"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="133"/>
+        <CursorPos Y="167"/>
+        <UsageCount Value="41"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uhardwaredetector.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uHardwareDetector"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="16"/>
+        <CursorPos X="48" Y="16"/>
+        <UsageCount Value="41"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uvideoqueue.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uVideoQueue"/>
+        <UsageCount Value="25"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uvideoqueueview.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frVideoQueue"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uVideoQueueView"/>
+        <UsageCount Value="25"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uprocessos.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uProcessos"/>
+        <UsageCount Value="24"/>
+      </Unit>
+      <Unit>
+        <Filename Value="udependencias.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uDependencias"/>
+        <UsageCount Value="24"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uimageformats.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uImageFormats"/>
+        <UsageCount Value="24"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uimageprocqueue.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uImageProcQueue"/>
+        <UsageCount Value="24"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uimageprocrunner.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uImageProcRunner"/>
+        <UsageCount Value="24"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uimageprocview.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frImageProc"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uImageProcView"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="670"/>
+        <CursorPos Y="686"/>
+        <UsageCount Value="24"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="usetup.pas"/>
         <ComponentName Value="frmSetup"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
@@ -35,77 +166,21 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="31"/>
         <CursorPos X="8" Y="37"/>
-        <UsageCount Value="204"/>
-      </Unit>
-      <Unit>
-        <Filename Value="udependencymanager.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uDependencyManager"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="74"/>
-        <CursorPos X="59" Y="62"/>
         <UsageCount Value="202"/>
-      </Unit>
-      <Unit>
-        <Filename Value="udiretodavinci.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frDiretoDaVinci"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Frame"/>
-        <UnitName Value="uDiretoDaVinci"/>
-        <EditorIndex Value="1"/>
-        <TopLine Value="748"/>
-        <CursorPos X="22" Y="773"/>
-        <UsageCount Value="196"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="usobre.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frSobre"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Frame"/>
-        <UnitName Value="uSobre"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="15" Y="31"/>
-        <UsageCount Value="196"/>
-      </Unit>
-      <Unit>
-        <Filename Value="ubaixar.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frBaixar"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Frame"/>
-        <UnitName Value="uBaixar"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="68" Y="9"/>
-        <UsageCount Value="196"/>
-      </Unit>
-      <Unit>
-        <Filename Value="usystemassistant.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uSystemAssistant"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="106"/>
-        <CursorPos X="7" Y="128"/>
-        <UsageCount Value="106"/>
-        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="unit1.lfm"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="409"/>
         <CursorPos X="16" Y="464"/>
-        <UsageCount Value="3"/>
+        <UsageCount Value="1"/>
         <DefaultSyntaxHighlighter Value="LFM"/>
       </Unit>
       <Unit>
         <Filename Value="unit_setup.lfm"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="27" Y="12"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="7"/>
         <DefaultSyntaxHighlighter Value="LFM"/>
       </Unit>
       <Unit>
@@ -113,12 +188,12 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="2021"/>
         <CursorPos X="51" Y="2033"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="7"/>
       </Unit>
       <Unit>
         <Filename Value="udiretodavinci.lfm"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="56"/>
+        <UsageCount Value="54"/>
         <DefaultSyntaxHighlighter Value="LFM"/>
       </Unit>
       <Unit>
@@ -126,13 +201,13 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="3597"/>
         <CursorPos Y="3613"/>
-        <UsageCount Value="53"/>
+        <UsageCount Value="51"/>
       </Unit>
       <Unit>
         <Filename Value="../../../../AppData/Local/lazarus/staticpackages.inc"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="110" Y="15"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="5"/>
       </Unit>
       <Unit>
         <Filename Value="/lazarus/lcl/controls.pp"/>
@@ -140,14 +215,14 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="82"/>
         <CursorPos X="39" Y="7"/>
-        <UsageCount Value="44"/>
+        <UsageCount Value="42"/>
       </Unit>
       <Unit>
         <Filename Value="/lazarus/lcl/include/comboex.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="161"/>
         <CursorPos Y="175"/>
-        <UsageCount Value="40"/>
+        <UsageCount Value="38"/>
       </Unit>
       <Unit>
         <Filename Value="/usr/lib/lazarus/lcl/extctrls.pp"/>
@@ -155,135 +230,111 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="1155"/>
         <CursorPos X="3" Y="1174"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="5"/>
       </Unit>
       <Unit>
         <Filename Value="unithelphelper.pas"/>
         <UnitName Value="other"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="5"/>
+      </Unit>
+      <Unit>
+        <Filename Value="usystemassistant.pas"/>
+        <UnitName Value="uUIResources"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="136"/>
+        <CursorPos X="33" Y="147"/>
+        <UsageCount Value="8"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../../../../lazarus/lcl/include/control.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="3521"/>
+        <CursorPos X="49" Y="3537"/>
+        <UsageCount Value="10"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../../../../lazarus/components/lazutils/lazutilities.pas"/>
+        <UnitName Value="LazUtilities"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="59"/>
+        <CursorPos X="8" Y="75"/>
+        <UsageCount Value="12"/>
+        <Loaded Value="True"/>
       </Unit>
     </Units>
-    <JumpHistory HistoryIndex="29">
+    <JumpHistory HistoryIndex="17">
       <Position>
-        <Filename Value="usystemassistant.pas"/>
-        <Caret Line="24" Column="37" TopLine="8"/>
+        <Filename Value="synapse.lpr"/>
+        <Caret Line="11" Column="81"/>
       </Position>
       <Position>
-        <Filename Value="usystemassistant.pas"/>
-        <Caret Line="26" Column="54" TopLine="4"/>
+        <Filename Value="synapse.lpr"/>
+        <Caret Line="7" Column="60"/>
       </Position>
       <Position>
-        <Filename Value="usystemassistant.pas"/>
-        <Caret Line="39" Column="5" TopLine="20"/>
+        <Filename Value="udownloadservice.pas"/>
+        <Caret Line="16" Column="57"/>
       </Position>
       <Position>
-        <Filename Value="usystemassistant.pas"/>
-        <Caret Line="28" Column="31" TopLine="15"/>
+        <Filename Value="synapse.lpr"/>
+        <Caret Line="15" Column="70"/>
       </Position>
       <Position>
-        <Filename Value="usystemassistant.pas"/>
-        <Caret Line="209" Column="53" TopLine="193"/>
+        <Filename Value="synapse.lpr"/>
+        <Caret Line="18" Column="74"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="97" Column="63" TopLine="78"/>
+        <Filename Value="umainview.pas"/>
+        <Caret Line="100" Column="18" TopLine="83"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="126" Column="61" TopLine="96"/>
+        <Filename Value="umainview.pas"/>
+        <Caret Line="10" Column="20"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="125" Column="71" TopLine="108"/>
+        <Filename Value="umainview.pas"/>
+        <Caret Line="100" Column="31" TopLine="83"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="138" Column="39" TopLine="110"/>
+        <Filename Value="umainview.pas"/>
+        <Caret Line="127" Column="27" TopLine="102"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="665" Column="100" TopLine="648"/>
+        <Filename Value="umediapipeline.pas"/>
+        <Caret Line="11" Column="31"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="639" Column="74" TopLine="626"/>
+        <Filename Value="synapse.lpr"/>
+        <Caret Line="12" Column="44"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="760" Column="58" TopLine="745"/>
+        <Filename Value="synapse.lpr"/>
+        <Caret Line="18" Column="77"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="839" Column="34" TopLine="809"/>
+        <Filename Value="umediapipeline.pas"/>
+        <Caret Line="650" Column="50" TopLine="628"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="838" Column="29" TopLine="819"/>
+        <Filename Value="umediapipeline.pas"/>
+        <Caret Line="642" Column="99" TopLine="631"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="831" Column="55" TopLine="819"/>
+        <Filename Value="umediapipeline.pas"/>
+        <Caret Line="645" Column="76" TopLine="633"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="1213" Column="22" TopLine="1090"/>
+        <Filename Value="uaboutview.pas"/>
+        <Caret Line="20" Column="65"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="1009" Column="19" TopLine="1131"/>
+        <Filename Value="uimageprocview.pas"/>
+        <Caret Line="17" Column="60"/>
       </Position>
       <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="737" Column="34" TopLine="715"/>
-      </Position>
-      <Position>
-        <Filename Value="usystemassistant.pas"/>
-        <Caret Line="23" Column="34"/>
-      </Position>
-      <Position>
-        <Filename Value="usystemassistant.pas"/>
-        <Caret Line="61" Column="66" TopLine="41"/>
-      </Position>
-      <Position>
-        <Filename Value="usystemassistant.pas"/>
-        <Caret Line="69" Column="84" TopLine="48"/>
-      </Position>
-      <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="832" Column="91" TopLine="819"/>
-      </Position>
-      <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="1065" Column="26" TopLine="1036"/>
-      </Position>
-      <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="113" Column="60" TopLine="98"/>
-      </Position>
-      <Position>
-        <Filename Value="usystemassistant.pas"/>
-        <Caret Line="106" Column="64" TopLine="96"/>
-      </Position>
-      <Position>
-        <Filename Value="usystemassistant.pas"/>
-        <Caret Line="135" Column="27" TopLine="111"/>
-      </Position>
-      <Position>
-        <Filename Value="usystemassistant.pas"/>
-        <Caret Line="124" Column="48" TopLine="106"/>
-      </Position>
-      <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="773" Column="19" TopLine="755"/>
-      </Position>
-      <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="774" Column="7" TopLine="756"/>
-      </Position>
-      <Position>
-        <Filename Value="udiretodavinci.pas"/>
-        <Caret Line="773" Column="20" TopLine="758"/>
+        <Filename Value="../../../../../lazarus/components/lazutils/lazutilities.pas"/>
+        <Caret Line="75" Column="46" TopLine="59"/>
       </Position>
     </JumpHistory>
     <RunParams>

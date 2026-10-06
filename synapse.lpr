@@ -7,10 +7,11 @@ uses
   cthreads,
   {$ENDIF}
   Interfaces,
-  Forms, Controls, runtimetypeinfocontrols,
-  uMain,
-  uSetup,
-  uDependencyManager, uDiretoDaVinci, uSobre, uBaixar, uSystemAssistant;
+  Forms, Controls, runtimetypeinfocontrols, uMainView,
+  uDependencyManager, uMediaPipeline, uAboutView, uDownloadService, uUIResources,
+  uHardwareDetector, uProcessos;
+
+{R *.res}
 
 {$R *.res}
 
@@ -31,8 +32,12 @@ begin
     end;
   end;
   {$ENDIF}
-
-  Application.CreateForm(TfrmPrincipal, frmPrincipal);
-  Application.CreateForm(TfrmSetup, frmSetup);
+  Application.CreateForm(TfrmMainView, frmMainView);
   Application.Run;
+
+  { Fechar o handle do Job dispara KILL_ON_JOB_CLOSE. Sem esta liberacao, um
+    ffmpeg, yt-dlp ou magick em andamento continuaria gravando arquivos
+    depois que a janela ja sumiu da tela. }
+  TGerenciadorProcessos.EncerrarTodos;
+  TGerenciadorProcessos.LiberarJob;
 end.

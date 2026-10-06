@@ -1,0 +1,18 @@
+object frVideoQueue: TfrVideoQueue
+  Height = 120
+  Width = 800
+  LCLVersion = '4.4.0.0'
+  object sb_itens: TScrollBox
+    Align = alClient
+    AutoScroll = True
+    BorderStyle = bsNone
+    TabOrder = 0
+  end
+  object lbl_vazio: TLabel
+    Align = alNone
+    AutoSize = True
+    Caption = 'Fila vazia: adicione vídeos pela URL ou pelos arquivos locais e depois processe.'
+    Font.Color = clGray
+    Font.Size = 9
+  end
+end

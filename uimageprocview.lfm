@@ -1,0 +1,272 @@
+object frImageProc: TfrImageProc
+  Left = 0
+  Height = 520
+  Top = 0
+  Width = 900
+  ClientHeight = 520
+  ClientWidth = 900
+  LCLVersion = '4.4.0.0'
+  TabOrder = 0
+  DesignLeft = 457
+  DesignTop = 225
+  object grp_acoes: TGroupBox
+    Left = 0
+    Height = 86
+    Top = 116
+    Width = 900
+    Align = alTop
+    Caption = 'Arquivos'
+    ClientHeight = 66
+    ClientWidth = 896
+    TabOrder = 0
+    object lbl_geral: TLabel
+      Left = 8
+      Height = 15
+      Top = 56
+      Width = 47
+      Caption = 'Fila vazia'
+      Font.Color = clGray
+      ParentFont = False
+    end
+    object pbar_geral: TProgressBar
+      Left = 8
+      Height = 6
+      Top = 74
+      Width = 884
+      Max = 1
+      TabOrder = 0
+    end
+    object btn_AdicionarArquivos: TButton
+      Left = 8
+      Height = 32
+      Top = 12
+      Width = 120
+      Caption = 'Adicionar imagens...'
+      TabOrder = 1
+      OnClick = AdicionarArquivosClick
+    end
+    object btn_AdicionarPasta: TButton
+      Left = 136
+      Height = 32
+      Top = 12
+      Width = 120
+      Caption = 'Adicionar pasta...'
+      TabOrder = 2
+      OnClick = AdicionarPastaClick
+    end
+    object btn_Destino: TButton
+      Left = 264
+      Height = 32
+      Hint = 'Escolher a pasta onde os arquivos serao gravados'
+      Top = 12
+      Width = 120
+      Caption = 'Destino...'
+      TabOrder = 3
+      OnClick = DestinoClick
+    end
+    object btn_Remover: TButton
+      Left = 392
+      Height = 32
+      Top = 12
+      Width = 100
+      Caption = 'Remover'
+      Enabled = False
+      TabOrder = 4
+      OnClick = RemoverSelecionadoClick
+    end
+    object btn_Limpar: TButton
+      Left = 500
+      Height = 32
+      Top = 12
+      Width = 100
+      Caption = 'Limpar'
+      Enabled = False
+      TabOrder = 5
+      OnClick = LimparClick
+    end
+    object btn_Cancelar: TButton
+      Left = 680
+      Height = 32
+      Top = 12
+      Width = 100
+      Caption = 'Cancelar'
+      Enabled = False
+      TabOrder = 6
+      OnClick = CancelarClick
+    end
+    object btn_Processar: TButton
+      Left = 788
+      Height = 32
+      Top = 12
+      Width = 104
+      Caption = 'Processar'
+      Enabled = False
+      TabOrder = 7
+      OnClick = ProcessarClick
+    end
+  end
+  object grp_opcoes: TGroupBox
+    Left = 0
+    Height = 116
+    Top = 0
+    Width = 900
+    Align = alTop
+    Caption = 'Saida e opcoes'
+    ClientHeight = 96
+    ClientWidth = 896
+    TabOrder = 1
+    object cmb_Formato: TComboBox
+      Left = 8
+      Height = 23
+      Top = 24
+      Width = 291
+      ItemHeight = 15
+      TabOrder = 0
+      OnChange = FormatoChange
+    end
+    object lbl_GrupoFormato: TLabel
+      Left = 320
+      Height = 15
+      Top = 24
+      Width = 56
+      Caption = 'Sem perda'
+      Font.Color = clGray
+      ParentFont = False
+    end
+    object lbl_RecursoFormato: TLabel
+      Left = 404
+      Height = 15
+      Top = 24
+      Width = 279
+      Caption = 'Alpha de verdade; padrao para thumbnails e overlays'
+      Font.Color = clGray
+      ParentFont = False
+    end
+    object spn_Qualidade: TSpinEdit
+      Left = 8
+      Height = 23
+      Top = 56
+      Width = 78
+      MaxValue = 100
+      TabOrder = 1
+      Value = 90
+    end
+    object lbl_Qualidade: TLabel
+      Left = 90
+      Height = 15
+      Top = 60
+      Width = 52
+      Caption = 'qualidade'
+      Font.Color = clGray
+      ParentFont = False
+    end
+    object chk_Redimensionar: TCheckBox
+      Left = 204
+      Height = 19
+      Top = 56
+      Width = 97
+      Caption = 'Redimensionar'
+      TabOrder = 2
+      OnClick = RedimensionarChange
+    end
+    object spn_Largura: TSpinEdit
+      Left = 308
+      Height = 23
+      Top = 54
+      Width = 68
+      Enabled = False
+      MaxValue = 100000
+      TabOrder = 3
+    end
+    object lbl_x: TLabel
+      Left = 378
+      Height = 15
+      Top = 58
+      Width = 5
+      Caption = 'x'
+      Font.Color = clGray
+      ParentFont = False
+    end
+    object spn_Altura: TSpinEdit
+      Left = 392
+      Height = 23
+      Top = 54
+      Width = 68
+      Enabled = False
+      MaxValue = 100000
+      TabOrder = 4
+    end
+    object chk_ManterProporcao: TCheckBox
+      Left = 466
+      Height = 19
+      Top = 56
+      Width = 114
+      Caption = 'Manter proporcao'
+      Enabled = False
+      TabOrder = 5
+      OnClick = ManterProporcaoClick
+    end
+    object chk_RemoverFundo: TCheckBox
+      Left = 608
+      Height = 19
+      Top = 56
+      Width = 100
+      Caption = 'Remover fundo'
+      TabOrder = 6
+    end
+    object chk_RemoverMetadados: TCheckBox
+      Left = 8
+      Height = 19
+      Top = 84
+      Width = 127
+      Caption = 'Remover metadados'
+      TabOrder = 7
+    end
+    object chk_AplicarEmTodos: TCheckBox
+      Left = 736
+      Height = 19
+      Top = 56
+      Width = 108
+      Caption = 'Aplicar em todos'
+      TabOrder = 8
+    end
+  end
+  object memo_Log: TMemo
+    Left = 0
+    Height = 92
+    Top = 428
+    Width = 900
+    Align = alBottom
+    ReadOnly = True
+    ScrollBars = ssVertical
+    TabOrder = 3
+    WordWrap = False
+  end
+  object sb_itens: TScrollBox
+    Left = 0
+    Height = 226
+    Top = 202
+    Width = 900
+    HorzScrollBar.Page = 355
+    VertScrollBar.Page = 15
+    Align = alClient
+    BorderStyle = bsNone
+    ClientHeight = 226
+    ClientWidth = 900
+    TabOrder = 2
+    object lbl_vazio: TLabel
+      Left = 0
+      Height = 15
+      Top = 0
+      Width = 355
+      Caption = 'Fila vazia: adicione imagens, escolha o formato de saida e processe.'
+      Font.Color = clGray
+      Font.Height = -12
+      ParentFont = False
+    end
+  end
+  object dlg_Arquivos: TOpenDialog
+    Filter = 'Imagens|*.jpg;*.jpeg;*.png;*.gif;*.bmp;*.tif;*.tiff;*.webp;*.heic;*.heif;*.avif|Todos os arquivos|*.*'
+    Options = [ofFileMustExist]
+  end
+end

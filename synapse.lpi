@@ -4,13 +4,14 @@
     <Version Value="12"/>
     <General>
       <SessionStorage Value="InProjectDir"/>
-      <Title Value="DaVinci Resolve - Media Prep Tool"/>
+      <Title Value="Synapse"/>
       <Scaled Value="True"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
       <XPManifest>
         <DpiAware Value="True"/>
       </XPManifest>
+      <Icon Value="0"/>
     </General>
     <BuildModes>
       <Item Name="Default" Default="True"/>
@@ -36,20 +37,12 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="umain.pas"/>
+        <Filename Value="umainview.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmPrincipal"/>
+        <ComponentName Value="frmMainView"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="uMain"/>
-      </Unit>
-      <Unit>
-        <Filename Value="usetup.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmSetup"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-        <UnitName Value="uSetup"/>
+        <UnitName Value="uMainView"/>
       </Unit>
       <Unit>
         <Filename Value="udependencymanager.pas"/>
@@ -57,33 +50,84 @@
         <UnitName Value="uDependencyManager"/>
       </Unit>
       <Unit>
-        <Filename Value="udiretodavinci.pas"/>
+        <Filename Value="umediapipeline.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="frDiretoDaVinci"/>
+        <ComponentName Value="frMediaPipeline"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
-        <UnitName Value="uDiretoDaVinci"/>
+        <UnitName Value="uMediaPipeline"/>
       </Unit>
       <Unit>
-        <Filename Value="usobre.pas"/>
+        <Filename Value="uaboutview.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="frSobre"/>
+        <ComponentName Value="frAboutView"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
-        <UnitName Value="uSobre"/>
+        <UnitName Value="uAboutView"/>
       </Unit>
       <Unit>
-        <Filename Value="ubaixar.pas"/>
+        <Filename Value="udownloadservice.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="frBaixar"/>
+        <ComponentName Value="frDownloadService"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
-        <UnitName Value="uBaixar"/>
+        <UnitName Value="uDownloadService"/>
       </Unit>
       <Unit>
-        <Filename Value="usystemassistant.pas"/>
+        <Filename Value="uuiresources.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="uSystemAssistant"/>
+        <UnitName Value="uUIResources"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uhardwaredetector.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uHardwareDetector"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uvideoqueue.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uVideoQueue"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uvideoqueueview.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frVideoQueue"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uVideoQueueView"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uprocessos.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uProcessos"/>
+      </Unit>
+      <Unit>
+        <Filename Value="udependencias.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uDependencias"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uimageformats.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uImageFormats"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uimageprocqueue.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uImageProcQueue"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uimageprocrunner.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uImageProcRunner"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uimageprocview.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frImageProc"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uImageProcView"/>
       </Unit>
     </Units>
   </ProjectOptions>
@@ -94,7 +138,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <Libraries Value="/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/"/>
+      <Libraries Value="/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
