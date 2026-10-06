@@ -45,6 +45,7 @@ Synapse automates this entire pipeline. It downloads the highest quality video/a
 ### ⚡ Powered By
 * **yt-dlp:** The gold standard for media downloading.
 * **FFmpeg:** The swiss-army knife of media processing.
+* **ImageMagick:** The swiss-army knife of image processing.
 
 ---
 
