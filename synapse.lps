@@ -7,7 +7,7 @@
       <Unit>
         <Filename Value="synapse.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="9"/>
+        <EditorIndex Value="11"/>
         <CursorPos X="21" Y="11"/>
         <UsageCount Value="204"/>
         <Loaded Value="True"/>
@@ -20,7 +20,7 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uMainView"/>
         <TopLine Value="166"/>
-        <CursorPos X="33" Y="181"/>
+        <CursorPos X="40" Y="171"/>
         <UsageCount Value="204"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -29,7 +29,7 @@
         <Filename Value="udependencymanager.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uDependencyManager"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="8"/>
         <TopLine Value="59"/>
         <CursorPos X="6" Y="63"/>
         <UsageCount Value="202"/>
@@ -42,10 +42,9 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uMediaPipeline"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="1899"/>
-        <CursorPos X="57" Y="1922"/>
+        <TopLine Value="1900"/>
+        <CursorPos X="25" Y="1903"/>
         <UsageCount Value="41"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -57,7 +56,7 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uAboutView"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="7"/>
         <TopLine Value="91"/>
         <CursorPos Y="107"/>
         <UsageCount Value="200"/>
@@ -71,9 +70,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uDownloadService"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="4"/>
         <TopLine Value="14"/>
-        <CursorPos X="40" Y="18"/>
+        <CursorPos X="38" Y="17"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -82,7 +82,7 @@
         <Filename Value="uuiresources.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uUIResources"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="10"/>
         <TopLine Value="133"/>
         <CursorPos Y="167"/>
         <UsageCount Value="41"/>
@@ -92,7 +92,7 @@
         <Filename Value="uhardwaredetector.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uHardwareDetector"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="9"/>
         <TopLine Value="16"/>
         <CursorPos X="48" Y="16"/>
         <UsageCount Value="41"/>
@@ -103,6 +103,12 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="uVideoQueue"/>
         <UsageCount Value="25"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uqueuepool.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uQueuePool"/>
+        <UsageCount Value="20"/>
       </Unit>
       <Unit>
         <Filename Value="uvideoqueueview.pas"/>
@@ -152,7 +158,7 @@
         <UnitName Value="uImageProcView"/>
         <EditorIndex Value="2"/>
         <TopLine Value="670"/>
-        <CursorPos Y="686"/>
+        <CursorPos X="28" Y="675"/>
         <UsageCount Value="24"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -248,10 +254,11 @@
       </Unit>
       <Unit>
         <Filename Value="../../../../../lazarus/lcl/include/control.inc"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="3521"/>
-        <CursorPos X="49" Y="3537"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="3993"/>
+        <CursorPos Y="4010"/>
         <UsageCount Value="10"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="../../../../../lazarus/components/lazutils/lazutilities.pas"/>
@@ -262,8 +269,18 @@
         <UsageCount Value="12"/>
         <Loaded Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="udownloadservice.lfm"/>
+        <HasResources Value="True"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="479"/>
+        <CursorPos X="4" Y="516"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="LFM"/>
+      </Unit>
     </Units>
-    <JumpHistory HistoryIndex="17">
+    <JumpHistory HistoryIndex="18">
       <Position>
         <Filename Value="synapse.lpr"/>
         <Caret Line="11" Column="81"/>
@@ -335,6 +352,10 @@
       <Position>
         <Filename Value="../../../../../lazarus/components/lazutils/lazutilities.pas"/>
         <Caret Line="75" Column="46" TopLine="59"/>
+      </Position>
+      <Position>
+        <Filename Value="udownloadservice.lfm"/>
+        <Caret Line="16" Column="36"/>
       </Position>
     </JumpHistory>
     <RunParams>

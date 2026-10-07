@@ -3,9 +3,10 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center;">
   <img src="/img/capture/Capture_Media_Pipeline.png" height="300">
-  <img src="/img/capture/Capture_Image_Processor.png" height="300">
+  <img src="/img/capture/Capture_Download_Service.png" height="300">
 </div>
 <div style="display: flex; justify-content: space-between; align-items: center;">
+  <img src="/img/capture/Capture_Image_Processor.png" height="300">
   <img src="/img/capture/Capture_About_View.png" height="300">
 </div>
 

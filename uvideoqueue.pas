@@ -5,7 +5,7 @@ unit uVideoQueue;
 interface
 
 uses
-  Classes, SysUtils, Graphics, GraphType, Process, uProcessos, uDependencias;
+  Classes, SysUtils, Graphics, GraphType, uProcessos, uDependencias;
 
 type
   { TVideoQueueStatus
@@ -92,6 +92,9 @@ type
     procedure AvisarAlteracao;
     procedure Renumerar;
     function IndiceInterno(AItem: TVideoQueueItem): Integer;
+    { Núcleo da adição em lote. AModo: 0=misto (arquivo existente vira
+      arquivo, resto vira URL), 1=só URLs, 2=só arquivos. }
+    function AddLote(const ALista: TStrings; AModo: Integer): Integer;
   public
     constructor Create;
     destructor Destroy; override;
@@ -101,6 +104,15 @@ type
     function  AdicionarURL(const AURL: string): TVideoQueueItem;
     function  AdicionarArquivo(const AArquivo: string): TVideoQueueItem;
     function  Adicionar(const AOrigem: string): TVideoQueueItem;
+
+    { Adição em lote. Uma única notificação de alteração ao final: sem
+      isso cada entrada dispararia uma reconstrução completa da visão e
+      a colagem de centenas de URLs viraria O(N²). As três variantes
+      deduplicam contra o que já existe na fila e dentro do próprio lote,
+      preservando a ordem de chegada. }
+    function  AdicionarURLs(const ALista: TStrings): Integer;
+    function  AdicionarArquivos(const ALista: TStrings): Integer;
+    function  AdicionarVarias(const ALista: TStrings): Integer;
     procedure Remover(AItem: TVideoQueueItem);
     procedure Mover(AItem: TVideoQueueItem; AParaPosicao: Integer);
     procedure Limpar;
@@ -122,9 +134,22 @@ type
     representante visual para que o item nunca fique sem imagem. }
   TThumbnailService = class
   public
+    { Versões diretas para a interface, ainda usadas pelos testes. }
     class function DoArquivo(const AArquivo: string; AWidth, AHeight: Integer): TBitmap;
     class function DoURL(const AURL: string; AWidth, AHeight: Integer): TBitmap;
     class function Representacao(const ATexto: string; AWidth, AHeight: Integer): TBitmap;
+
+    { Versões que escrevem o BMP num arquivo temporário e devolvem o
+      caminho — são as usadas pelos trabalhadores em thread própria,
+      que não podem criar TBitmap (o canvas pertence à thread da
+      interface). CarregarBMP/ApagarBMP correm na interface. }
+    class function DoArquivoParaArquivo(const AArquivo: string;
+      AWidth, AHeight: Integer; const ASufixo: string): string;
+    class function DoURLParaArquivo(const AURL: string;
+      AWidth, AHeight: Integer; const ASufixo: string;
+      out ATitulo: string): string;
+    class function CarregarBMP(const ACaminho: string): TBitmap;
+    class procedure ApagarBMP(const ACaminho: string);
   end;
 
 { ExtrairURLs
@@ -369,6 +394,92 @@ begin
     Result := AdicionarURL(AOrigem);
 end;
 
+function TVideoQueue.AddLote(const ALista: TStrings; AModo: Integer): Integer;
+var
+  U, Ar: TStringList;
+  i, X: Integer;
+  Origem: string;
+begin
+  Result := 0;
+  if not Assigned(ALista) then
+    Exit;
+  if ALista.Count = 0 then
+    Exit;
+
+  { Duas listas ordenadas usadas como conjuntos: uma com as URL existentes
+    e outra com os caminhos de arquivo. A dedução O((N+M) log M) acontece
+    por Find/Add, e como as entradas do próprio lote entram no conjunto à
+    medida que são aceitas, a repetição dentro da colagem some também. }
+  U := TStringList.Create;
+  Ar := TStringList.Create;
+  try
+    U.Sorted := True;
+    U.Duplicates := dupIgnore;
+    Ar.Sorted := True;
+    Ar.Duplicates := dupIgnore;
+
+    for i := 0 to FItens.Count - 1 do
+    begin
+      if TVideoQueueItem(FItens[i]).URL <> '' then
+        U.Add(TVideoQueueItem(FItens[i]).URL);
+      if TVideoQueueItem(FItens[i]).ArquivoLocal <> '' then
+        Ar.Add(TVideoQueueItem(FItens[i]).ArquivoLocal);
+    end;
+
+    for i := 0 to ALista.Count - 1 do
+    begin
+      Origem := Trim(ALista[i]);
+      if Origem = '' then
+        Continue;
+
+      { Arquivo que existe entra como arquivo, exceto quando a chamada
+        pede explicitamente só URLs. }
+      if (AModo <> 1) and FileExists(Origem) then
+      begin
+        if Ar.Find(Origem, X) then
+          Continue;
+        Ar.Add(Origem);
+        FItens.Add(TVideoQueueItem.Create(FItens.Count + 1, '', Origem));
+        Inc(Result);
+        Continue;
+      end;
+
+      if AModo = 2 then
+        Continue;
+
+      if U.Find(Origem, X) then
+        Continue;
+      U.Add(Origem);
+      FItens.Add(TVideoQueueItem.Create(FItens.Count + 1, Origem, ''));
+      Inc(Result);
+    end;
+  finally
+    U.Free;
+    Ar.Free;
+  end;
+
+  if Result > 0 then
+  begin
+    Renumerar;
+    AvisarAlteracao;
+  end;
+end;
+
+function TVideoQueue.AdicionarURLs(const ALista: TStrings): Integer;
+begin
+  Result := AddLote(ALista, 1);
+end;
+
+function TVideoQueue.AdicionarArquivos(const ALista: TStrings): Integer;
+begin
+  Result := AddLote(ALista, 2);
+end;
+
+function TVideoQueue.AdicionarVarias(const ALista: TStrings): Integer;
+begin
+  Result := AddLote(ALista, 0);
+end;
+
 procedure TVideoQueue.Remover(AItem: TVideoQueueItem);
 var
   i: Integer;
@@ -557,187 +668,262 @@ end;
 
 { TThumbnailService }
 
+{ Caminho de um BMP temporário único dentro do pool de miniaturas. }
+function CaminhoTemporarioBMP(const ABase, ASufixo: string): string;
+begin
+  Result := IncludeTrailingPathDelimiter(GetTempDir) + ABase + '_' + ASufixo + '.bmp';
+end;
+
+{ A primeira linha útil de uma saída de texto: não vazia e fora de
+  colchetes, para não confundir o título com linhas de serviço do yt-dlp
+  ("[youtube] Extracting URL", avisos...). }
+function PrimeiraLinhaUtil(const ATexto: string): string;
+var
+  S, Linha: string;
+  P: Integer;
+begin
+  Result := '';
+  S := Trim(ATexto);
+  if S = '' then
+    Exit;
+
+  repeat
+    P := Pos(#10, S);
+    if P > 0 then
+    begin
+      Linha := Copy(S, 1, P - 1);
+      S := Copy(S, P + 1, Length(S));
+    end
+    else
+    begin
+      Linha := S;
+      S := '';
+    end;
+    Linha := Trim(Linha);
+    if (Linha <> '') and (Linha[1] <> '[') then
+      Exit(Linha);
+  until S = '';
+end;
+
+{ Roda o FFmpeg convertendo uma entrada (vídeo ou imagem) em BMP pequeno
+  no diretório temporário. A espera usa ABombeia=False: ela acontece em
+  thread própria e não pode repintar a interface. O processo entra no Job
+  do aplicativo dentro de Iniciar, então não sobrevive ao fechamento da
+  janela. ACapturarQuadro coloca o -ss 1 antes do -i para pular do começo
+  do vídeo. }
+function ConverterEmBMP(const AEntrada: string; ACapturarQuadro: Boolean;
+  AWidth, AHeight: Integer; const ASufixo: string): string;
+var
+  Exe, Destino: string;
+  Args: TStringList;
+  Proc: TProcessoGerenciado;
+begin
+  Result := '';
+  if (ASufixo = '') or (AEntrada = '') or (not FileExists(AEntrada)) then
+    Exit;
+
+  Exe := TGerenciadorDependencias.Caminho(depFFmpeg);
+  if Exe = '' then
+    Exe := 'ffmpeg';
+
+  { BMP é usado porque TBitmap faz parte do LCL e dispensa fcl-image.
+    Sem poUsePipes o ffmpeg não ganha console e jogar progresso fora é
+    apenas ignorar a escrita sem redirecionar nada. }
+  Destino := CaminhoTemporarioBMP('syn_thumb', ASufixo);
+
+  Args := TStringList.Create;
+  Proc := TProcessoGerenciado.Create;
+  try
+    Args.Add('-y');
+    if ACapturarQuadro then
+    begin
+      Args.Add('-ss');
+      Args.Add('1');
+    end;
+    Args.Add('-i');
+    Args.Add(AEntrada);
+    Args.Add('-frames:v');
+    Args.Add('1');
+    Args.Add('-vf');
+    Args.Add(Format('scale=%d:%d:force_original_aspect_ratio=decrease',
+      [AWidth, AHeight]));
+    Args.Add('-c:v');
+    Args.Add('bmp');
+    Args.Add('-f');
+    Args.Add('image2');
+    Args.Add(Destino);
+
+    if not Proc.Iniciar(Exe, Args, nil, False) then
+      Exit;
+    if not Proc.Aguardar(30000, False) then
+    begin
+      Proc.Encerrar(encForcar);
+      Exit;
+    end;
+  finally
+    Proc.Free;
+    Args.Free;
+  end;
+
+  if FileExists(Destino) then
+    Result := Destino;
+end;
+
+class function TThumbnailService.CarregarBMP(const ACaminho: string): TBitmap;
+begin
+  Result := nil;
+  if (ACaminho = '') or (not FileExists(ACaminho)) then
+    Exit;
+  Result := TBitmap.Create;
+  try
+    Result.LoadFromFile(ACaminho);
+  except
+    Result.Free;
+    Result := nil;
+  end;
+end;
+
+class procedure TThumbnailService.ApagarBMP(const ACaminho: string);
+begin
+  if ACaminho <> '' then
+    DeleteFile(ACaminho);
+end;
+
+class function TThumbnailService.DoArquivoParaArquivo(const AArquivo: string;
+  AWidth, AHeight: Integer; const ASufixo: string): string;
+begin
+  Result := ConverterEmBMP(AArquivo, True, AWidth, AHeight, ASufixo);
+end;
+
 class function TThumbnailService.DoArquivo(const AArquivo: string;
                                           AWidth, AHeight: Integer): TBitmap;
 var
-  Destino, Cmd: string;
-  Processo: TProcess;
-  Bitmap: TBitmap;
+  P: string;
 begin
   Result := nil;
-  if (AArquivo = '') or (not FileExists(AArquivo)) then
+  P := DoArquivoParaArquivo(AArquivo, AWidth, AHeight,
+    IntToStr(GetProcessID) + '_' + FormatDateTime('hhnnsszzz', Now));
+  if P = '' then
     Exit;
-
-  { BMP é usado porque TBitmap faz parte do LCL e dispensa fcl-image. }
-  Destino := IncludeTrailingPathDelimiter(GetTempDir) +
-             'syn_thumb_' + IntToStr(GetProcessID) + '_' +
-             FormatDateTime('hhnnsszzz', Now) + '.bmp';
-
-  Processo := TProcess.Create(nil);
-  try
-    { '-vf scale=...' precisa chegar ao ffmpeg como um argumento so. Via
-      'cmd.exe /c' o quoting era resolvido pelo interpretador de comandos;
-      chamado direto, o argumento e repassado como escrito. O descarte de
-      stderr deixa de existir: sem shell nao ha para onde redirecionar, e
-      poStderrToOutPut com a saida descartada resolve o mesmo problema. }
-    Processo.Executable := TGerenciadorDependencias.Caminho(depFFmpeg);
-    if Processo.Executable = '' then
-      Processo.Executable := 'ffmpeg';
-    Processo.Parameters.Add('-y');
-    Processo.Parameters.Add('-ss');
-    Processo.Parameters.Add('1');
-    Processo.Parameters.Add('-i');
-    Processo.Parameters.Add(AArquivo);
-    Processo.Parameters.Add('-frames:v');
-    Processo.Parameters.Add('1');
-    Processo.Parameters.Add('-vf');
-    Processo.Parameters.Add(Format('scale=%d:%d:force_original_aspect_ratio=decrease',
-      [AWidth, AHeight]));
-    Processo.Parameters.Add('-c:v');
-    Processo.Parameters.Add('bmp');
-    Processo.Parameters.Add('-f');
-    Processo.Parameters.Add('image2');
-    Processo.Parameters.Add(Destino);
-    Processo.Options := [poNoConsole, poWaitOnExit, poStderrToOutPut];
-    Processo.Execute;
-
-    {$IFDEF WINDOWS}
-    { Vincular ao Job evita que um ffmpeg esquecido fique rodando sem
-      ninguem esperando pelo arquivo. }
-    TGerenciadorProcessos.Vincular(THandle(Processo.ProcessHandle));
-    {$ENDIF}
-  finally
-    Processo.Free;
-  end;
-
-  if not FileExists(Destino) then
-    Exit;
-
-  Bitmap := TBitmap.Create;
-  try
-    Bitmap.LoadFromFile(Destino);
-    Result := Bitmap;
-    Bitmap := nil;
-  except
-    Result := nil;
-  end;
-  Bitmap.Free;
-  DeleteFile(Destino);
+  Result := CarregarBMP(P);
+  ApagarBMP(P);
 end;
 
-{ Executa um comando externo ignorando o console e sem lancar excecao. }
-function ExecutarSilencioso(const ACmd: string): Boolean;
+{ Baixa a miniatura publicada pela própria fonte (yt-dlp) e a converte
+  em BMP temporário. Também devolve o título na primeira linha útil da
+  saída: a mesma chamada de rede que baixa a imagem informa o nome, e
+  com isso o item deixa de mostrar a URL enquanto aguarda o download. }
+class function TThumbnailService.DoURLParaArquivo(const AURL: string;
+  AWidth, AHeight: Integer; const ASufixo: string; out ATitulo: string): string;
 var
-  Processo: TProcess;
-  Partes: TStringList;
-  i: Integer;
-begin
-  Result := False;
-  Partes := TGerenciadorDependencias.DividirArgumentos(ACmd);
-  if Partes.Count = 0 then
-    Exit;
-  try
-    { A linha vira executavel mais argumentos, e o binario e chamado
-      direto: sem 'cmd.exe /c' no meio nao existe interpretador de
-      comandos para reinterpretar as aspas. }
-    Processo := TProcess.Create(nil);
-    try
-      Processo.Executable := Partes[0];
-      for i := 1 to Partes.Count - 1 do
-        Processo.Parameters.Add(Partes[i]);
-      Processo.Options := [poNoConsole, poWaitOnExit, poStderrToOutPut];
-      Processo.Execute;   { TProcess.Execute e' procedure: nao devolve valor }
-      Result := True;
-    except
-      Result := False;
-    end;
-    Processo.Free;
-  finally
-    Partes.Free;
-  end;
-end;
-
-{ Converte qualquer imagem suportada pelo FFmpeg em BMP e a devolve. }
-function ImportarComoBitmap(const AImagem: string;
-  AWidth, AHeight: Integer): TBitmap;
-var
-  Base, Destino: string;
-  Bitmap: TBitmap;
-begin
-  Result := nil;
-  if (AImagem = '') or (not FileExists(AImagem)) then
-    Exit;
-
-  Base := IncludeTrailingPathDelimiter(GetTempDir) +
-          'syn_thumb_' + IntToStr(GetProcessID) + '_' +
-          FormatDateTime('hhnnsszzz', Now);
-  Destino := Base + '.bmp';
-
-  ExecutarSilencioso(Format('ffmpeg -y -i "%s" -frames:v 1 ' +
-                            '-vf "scale=%d:%d:force_original_aspect_ratio=decrease" ' +
-                            '-c:v bmp -f image2 "%s" %s',
-                            [AImagem, AWidth, AHeight, Destino,
-                             {$IFDEF WINDOWS}'2>nul'{$ELSE}'2>/dev/null'{$ENDIF}]));
-
-  if FileExists(Destino) then
-  begin
-    Bitmap := TBitmap.Create;
-    try
-      Bitmap.LoadFromFile(Destino);
-      Result := Bitmap;
-      Bitmap := nil;
-    except
-      Result := nil;
-    end;
-    Bitmap.Free;
-  end;
-
-  DeleteFile(Destino);
-end;
-
-{ Baixa a miniatura publicada pela propria fonte (yt-dlp) e a converte
-  para Bitmap. Devolve nil quando a origem nao possui miniatura. }
-class function TThumbnailService.DoURL(const AURL: string;
-                                       AWidth, AHeight: Integer): TBitmap;
-var
-  Base, Imagem: string;
+  Exe, Base, Imagem: string;
+  Args: TStringList;
+  Proc: TProcessoGerenciado;
   Info: TSearchRec;
+  Inicio: QWord;
+  Saida, Trecho: string;
+  Estourou: Boolean;
 begin
-  Result := nil;
-  if Trim(AURL) = '' then
+  Result := '';
+  ATitulo := '';
+  if (ASufixo = '') or (Trim(AURL) = '') then
     Exit;
 
-  Base := IncludeTrailingPathDelimiter(GetTempDir) +
-          'syn_thumburl_' + IntToStr(GetProcessID) + '_' +
-          FormatDateTime('hhnnsszzz', Now);
+  Exe := TGerenciadorDependencias.Caminho(depYtDlp);
+  if Exe = '' then
+    Exe := 'yt-dlp';
 
-  { --write-thumbnail + --skip-download nao baixa o video, apenas a imagem. }
-  ExecutarSilencioso(Format('yt-dlp --no-playlist --skip-download --write-thumbnail ' +
-                            '--no-warnings --output "%s.%%(ext)s" "%s" %s',
-                            [Base, AURL,
-                             {$IFDEF WINDOWS}'2>nul'{$ELSE}'2>/dev/null'{$ENDIF}]));
+  { Base sem extensão: o %(ext)s do modelo de saída escolhe o formato. }
+  Base := IncludeTrailingPathDelimiter(GetTempDir) + 'syn_thumburl_' + ASufixo;
+
+  Args := TStringList.Create;
+  Proc := TProcessoGerenciado.Create;
+  try
+    Args.Add('--no-playlist');
+    Args.Add('--skip-download');
+    Args.Add('--write-thumbnail');
+    { --print põe o yt-dlp em modo simulate e aí ele NÃO grava nada em
+      disco — nem a miniatura. --no-simulate devolve a gravação enquanto
+      --skip-download continua impedindo o download do vídeo. }
+    Args.Add('--no-simulate');
+    Args.Add('--no-warnings');
+    Args.Add('--print');
+    Args.Add('%(title)s');
+    Args.Add('--output');
+    Args.Add(Base + '.%(ext)s');
+    Args.Add('--');
+    Args.Add(Trim(AURL));
+
+    if Proc.Iniciar(Exe, Args, nil, True) then
+    begin
+      { A saída precisa ser drenada enquanto o yt-dlp roda. O buffer do
+        pipe enche em poucos KB e o processo trava na escrita, sem
+        nunca terminar — Aguardar apenas acompanha o fim, não lê nada,
+        e o prazo de 45 s estourava sem que a imagem chegasse a ser
+        gravada. O laço lê a cada passo e impõe o próprio prazo; roda
+        em thread própria, então não há mensagem a bombear. }
+      Estourou := False;
+      Inicio   := GetTickCount64;
+      Saida    := '';
+      while Proc.Ativo do
+      begin
+        if Proc.LerDisponivel(Trecho) > 0 then
+          Saida := Saida + Trecho;
+        Sleep(10);
+        if Integer(GetTickCount64 - Inicio) >= 45000 then
+        begin
+          Proc.Encerrar(encForcar);
+          Estourou := True;
+          Break;
+        end;
+      end;
+      if Estourou then
+        ATitulo := PrimeiraLinhaUtil(Saida)
+      else
+        ATitulo := PrimeiraLinhaUtil(Saida + Proc.LerTudo);
+    end;
+  finally
+    Proc.Free;
+    Args.Free;
+  end;
 
   Imagem := '';
   if FindFirst(Base + '.*', faAnyFile, Info) = 0 then
   begin
     try
-      Imagem := IncludeTrailingPathDelimiter(GetTempDir) + Info.Name;
+      repeat
+        { Um download interrompido deixa um '*.part' para trás: ele não é
+          imagem e não deve vencer a busca. }
+        if LowerCase(ExtractFileExt(Info.Name)) <> '.part' then
+        begin
+          Imagem := IncludeTrailingPathDelimiter(GetTempDir) + Info.Name;
+          Break;
+        end;
+      until FindNext(Info) <> 0;
     finally
       FindClose(Info);
     end;
   end;
 
   if Imagem <> '' then
-    Result := ImportarComoBitmap(Imagem, AWidth, AHeight);
-
-  if FindFirst(Base + '.*', faAnyFile, Info) = 0 then
   begin
-    try
-      DeleteFile(IncludeTrailingPathDelimiter(GetTempDir) + Info.Name);
-    finally
-      FindClose(Info);
-    end;
+    Result := ConverterEmBMP(Imagem, False, AWidth, AHeight, ASufixo);
+    DeleteFile(Imagem);
   end;
+end;
+
+class function TThumbnailService.DoURL(const AURL: string;
+                                       AWidth, AHeight: Integer): TBitmap;
+var
+  P, Titulo: string;
+begin
+  Result := nil;
+  P := DoURLParaArquivo(AURL, AWidth, AHeight,
+    IntToStr(GetProcessID) + '_' + FormatDateTime('hhnnsszzz', Now), Titulo);
+  if P = '' then
+    Exit;
+  Result := CarregarBMP(P);
+  ApagarBMP(P);
 end;
 
 class function TThumbnailService.Representacao(const ATexto: string;

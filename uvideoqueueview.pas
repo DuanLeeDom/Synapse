@@ -6,10 +6,30 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, StdCtrls, ExtCtrls,
-  Buttons, ComCtrls, Dialogs, LCLIntf, uVideoQueue;
+  Buttons, ComCtrls, Dialogs, LCLIntf, uVideoQueue, uQueuePool;
 
 type
   TfrVideoQueue = class;
+
+  { TThumbPoolTask
+    Miniatura de um item da fila entregue ao TQueuePool. O worker roda
+    Executar dentro da própria thread, gerando um BMP temporário e, no
+    caso de URL, descobrindo também o título; a interface lê os campos
+    SaidaBMP/Titulo quando a tarefa volta pela lista de concluídos.
+    Item nunca é tocado pelo worker; SaidaBMP/Titulo são escritos por ele
+    e lidos na main thread, nunca ao mesmo tempo. }
+  TThumbPoolTask = class(TPoolTask)
+  public
+    Item    : TVideoQueueItem;
+    EhURL   : Boolean;
+    Origem  : string;
+    Sufixo  : string;
+    Largura : Integer;
+    Altura  : Integer;
+    SaidaBMP: string;
+    Titulo  : string;
+    procedure Executar; override;
+  end;
 
   { TThumbPanel
     Moldura da miniatura: fundo fixo e borda discreta com cantos
@@ -25,13 +45,16 @@ type
   end;
 
   { TVideoQueueItemView
-    Painel visual de um item da fila: miniatura, título, origem, formatos,
-    destino, situação e progresso. Cada instância recebe um Name próprio —
-    todos os painéis pertencem ao mesmo owner (o frame da fila), portanto
-    nomes fixos como 'ItemFila' provocariam EComponentError ao adicionar
-    o segundo vídeo. Nenhum painel pode exibir a própria Caption: por
-    padrão o TPanel mostra o Name como texto, e era isso que vazava
-    identificadores internos como "ItemFila5_Texto" na interface. }
+    Painel visual de um item da fila. Layout da esquerda para a direita:
+    coluna de status (selo + mensagem), botão X de remoção, miniatura,
+    informações (título, origem, destino, formatos, download) e a alça
+    de expandir na borda direita; a barra de progresso ocupa a base. Cada
+    instância recebe um Name próprio — todos os painéis pertencem ao
+    mesmo owner (o frame da fila), portanto nomes fixos como 'ItemFila'
+    provocariam EComponentError ao adicionar o segundo vídeo. Nenhum
+    painel pode exibir a própria Caption: por padrão o TPanel mostra o
+    Name como texto, e era isso que vazava identificadores internos como
+    "ItemFila5_Texto" na interface. }
   TVideoQueueItemView = class(TPanel)
   private
     FItem        : TVideoQueueItem;
@@ -40,13 +63,14 @@ type
     FPosicaoMouse: TPoint;
     FPressionado : Boolean;
     FBloqueado   : Boolean;
+    FExpandido   : Boolean;
 
 pnl_thumb    : TThumbPanel;
   img_thumb    : TImage;
-  lbl_indice   : TLabel;
   pnl_info     : TPanel;
     lbl_titulo   : TLabel;
     lbl_origem   : TLabel;
+    lbl_destino  : TLabel;
     lbl_formatos : TLabel;
     lbl_download : TLabel;
     pbar_item    : TProgressBar;
@@ -55,10 +79,16 @@ pnl_thumb    : TThumbPanel;
     lbl_status   : TLabel;
     lbl_mensagem : TLabel;
     btn_remover  : TSpeedButton;
+    btn_expandir : TSpeedButton;
 
     procedure Montar;
     function  NovoPainel(APai: TWinControl; const ANome: string;
                          AAlinhar: TAlign): TPanel;
+    { Os eventos de mouse ficam protegidos em TControl e só aparecem
+      republicados nas classes concretas, por isso os três overloads. }
+    procedure RepassarMouse(AControle: TPanel); overload;
+    procedure RepassarMouse(AControle: TLabel); overload;
+    procedure RepassarMouse(AControle: TImage); overload;
     procedure ItemMouseDown(Sender: TObject; Button: TMouseButton;
                             Shift: TShiftState; X, Y: Integer);
     procedure ItemMouseMove(Sender: TObject; Shift: TShiftState;
@@ -66,8 +96,10 @@ pnl_thumb    : TThumbPanel;
     procedure ItemMouseUp(Sender: TObject; Button: TMouseButton;
                           Shift: TShiftState; X, Y: Integer);
     procedure BtnRemoverClick(Sender: TObject);
+    procedure BtnExpandirClick(Sender: TObject);
     procedure ItemDblClick(Sender: TObject);
     procedure AtualizarVisual;
+    procedure AplicarAlturaExpandida;
     function  Quadro: TfrVideoQueue;
     function  Truncar(const ATexto: string; AMaxChars: Integer): string;
     function  MensagemCompacta(const ATexto: string): string;
@@ -97,12 +129,11 @@ property Item        : TVideoQueueItem read FItem write FItem;
     procedure FrameResize(Sender: TObject);
     procedure TimerMiniaturasTimer(Sender: TObject);
   private
-    FFila       : TVideoQueue;
+FFila       : TVideoQueue;
     FViews      : TList;
     FSelecionado: TVideoQueueItemView;
     FTimer      : TTimer;
-    FPendentes  : TStringList;
-    FURLsPendentes: TStringList;
+    FPool       : TQueuePool;
     FProcessando: Boolean;
     pnl_marcador: TPanel;
 
@@ -110,27 +141,31 @@ property Item        : TVideoQueueItem read FItem write FItem;
     FItemArrasto : TVideoQueueItem;
     FIndiceDestino: Integer;
 
-    procedure FilaAlterou(Sender: TObject);
+procedure FilaAlterou(Sender: TObject);
     procedure Selecionar(AView: TVideoQueueItemView);
     procedure RemoverItem(AItem: TVideoQueueItem);
-    procedure ProcessarMiniaturaPendente;
+    procedure ProcessarConcluidos;
+    procedure AplicarMiniatura(ATarefa: TThumbPoolTask);
     procedure LargurarItens;
-    procedure ReaplicarOrdem;
+    procedure ReaplicarOrdem(AInicio: Integer);
     procedure MostrarMarcador(APosicao: Integer);
     procedure EsconderMarcador;
     function  MouseNoScrollBox: TPoint;
     function  IndiceDestinoEmY(AY: Integer): Integer;
     function  ViewForaDoArraste(APosicao: Integer): TVideoQueueItemView;
-    function  OrdemDesalinhada: Boolean;
+    function  PrimeiroDesalinhado: Integer;
     function  ViewDe(AItem: TVideoQueueItem): TVideoQueueItemView;
     function  ContidoNaFila(AItem: TVideoQueueItem): Boolean;
     function  GetSelecionado: TVideoQueueItem;
+    procedure AplicarNovosItens(AInicio: Integer);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    function  Adicionar(const AOrigem: string): TVideoQueueItem;
+function  Adicionar(const AOrigem: string): TVideoQueueItem;
     function  AdicionarArquivos(const AArquivos: TStrings): Integer;
+    function  AdicionarURLs(const AURLs: TStrings): Integer;
+    function  AdicionarVarias(const ALista: TStrings): Integer;
     procedure EnfileirarMiniatura(AItem: TVideoQueueItem;
                                   const AArquivo: string);
     procedure EnfileirarMiniaturaURL(AItem: TVideoQueueItem;
@@ -140,6 +175,10 @@ property Item        : TVideoQueueItem read FItem write FItem;
     procedure RemoverFinalizados;
     procedure LimparTudo;
     procedure AtualizarItem(AItem: TVideoQueueItem);
+
+    { Exposta só para os testes: entrega uma tarefa de miniatura já
+      concluída pelo mesmo caminho que o timer usa. }
+    procedure AplicarMiniaturaPublico(ATarefa: TThumbPoolTask);
     procedure AtualizarGeral;
     procedure AbrirPasta(const APasta: string);
     procedure AbrirItemDblClick(Sender: TObject);
@@ -172,19 +211,26 @@ implementation
 {$R *.lfm}
 
 const
-  { Altura compacta do item: cinco linhas curtas dentro de 74 px, para
-    exibir vários vídeos ao mesmo tempo sem perder nenhuma informação. }
-  ALTURA_ITEM      = 74;
-  LARGURA_INDICE   = 26;
-  LARGURA_THUMB    = 96;
-  MARGEM_THUMB     = 5;
-  LARGURA_STATUS   = 140;
-  LARGURA_BOTAO    = 24;
+  { Altura compacta do item: cinco linhas curtas dentro de 80 px, para
+    exibir vários vídeos ao mesmo tempo sem perder nenhuma informação.
+    Expandido, a mesma pilha cresce para 136 px e os rótulos passam a
+    quebrar linha. A barra de progresso ocupa 6 px na base quando visível;
+    as contas consideram as duas situações. }
+  ALTURA_ITEM        = 80;
+  ALTURA_ITEM_EXP    = 136;
+  LARGURA_THUMB      = 96;
+  MARGEM_THUMB       = 5;
+  LARGURA_STATUS     = 140;
+  LARGURA_BOTAO      = 24;
+  LARGURA_EXPANDIR   = 16;
 
-  ALTURA_TITULO    = 17;
-  ALTURA_LINHA     = 13;
-  ALTURA_BARRA     = 6;
-  ALTURA_BADGE     = 20;
+  ALTURA_TITULO      = 17;
+  ALTURA_TITULO_EXP  = 32;
+  ALTURA_LINHA       = 13;
+  ALTURA_LINHA_EXP   = 24;
+  ALTURA_DETALHE_EXP = 21;
+  ALTURA_BARRA       = 6;
+  ALTURA_BADGE       = 20;
 
   { Miniaturas são geradas no dobro do tamanho exibido para o
     redimensionamento ficar nítido em telas de alta densidade. }
@@ -291,6 +337,33 @@ begin
   Result.Color       := COR_TEXTO;
 end;
 
+{ Os rótulos e a miniatura ficariam "furos" para o mouse, impedindo o
+  arraste; por isso repassam os eventos do item. Os dois botões ficam
+  de fora para não iniciar um arraste ao serem clicados. }
+procedure TVideoQueueItemView.RepassarMouse(AControle: TPanel);
+begin
+  AControle.OnMouseDown := @ItemMouseDown;
+  AControle.OnMouseMove := @ItemMouseMove;
+  AControle.OnMouseUp   := @ItemMouseUp;
+  AControle.OnDblClick  := @ItemDblClick;
+end;
+
+procedure TVideoQueueItemView.RepassarMouse(AControle: TLabel);
+begin
+  AControle.OnMouseDown := @ItemMouseDown;
+  AControle.OnMouseMove := @ItemMouseMove;
+  AControle.OnMouseUp   := @ItemMouseUp;
+  AControle.OnDblClick  := @ItemDblClick;
+end;
+
+procedure TVideoQueueItemView.RepassarMouse(AControle: TImage);
+begin
+  AControle.OnMouseDown := @ItemMouseDown;
+  AControle.OnMouseMove := @ItemMouseMove;
+  AControle.OnMouseUp   := @ItemMouseUp;
+  AControle.OnDblClick  := @ItemDblClick;
+end;
+
 procedure TVideoQueueItemView.Montar;
 var
   Prefixo: string;
@@ -299,10 +372,21 @@ begin
   Prefixo := 'ItemFila' + IntToStr(FSequenciaItem) + '_';
   Name   := Copy(Prefixo, 1, Length(Prefixo) - 1);
 
-  { Atenção: no LCL o alinhamento empilha os filhos na ordem INVERSA à de
-    criação — o último filho criado é o que fica mais acima (alTop) ou mais
-    à esquerda (alLeft). Por isso os blocos abaixo são construídos de baixo
-    para cima. }
+  { Layout do item, da esquerda para a direita:
+      [status][X][miniatura][informações][expandir]
+    e a barra de progresso de largura inteira na base. O status fica numa
+    coluna fixa à esquerda para nunca ser empurrado ou cortado pelas
+    informações; o texto vive no meio (alClient) e a miniatura ocupa a
+    moldura à esquerda do X.
+
+    Atenção: no LCL o alinhamento empilha os filhos de mesmo Align na
+    ordem INVERSA da criação (último criado = topo em alTop e esquerda em
+    alLeft), e a ordem de resolução dos Align é alTop, alBottom, alLeft,
+    alRight, alClient — por isso os blocos abaixo são construídos de baixo
+    para cima e as colunas são criadas ao contrário da ordem visual.
+    Recolhido, cada rótulo traz o texto truncado com reticências e o Hint
+    guarda o texto inteiro; o botão da borda direita expande o item para
+    quebrar as linhas e mostrar tudo. }
   Height      := ALTURA_ITEM;
   Align       := alTop;   { alLeft empilharia os itens lado a lado }
   ParentColor := False;
@@ -316,20 +400,24 @@ begin
   OnMouseUp   := @ItemMouseUp;
   OnDblClick  := @ItemDblClick;
 
-  { --- textos (criados por último para aparecerem no topo da coluna) --- }
+  { --- informações, criadas de baixo para cima: o título é o último,
+       portanto fica no topo da coluna --- }
   pnl_info := NovoPainel(Self, Prefixo + 'Textos', alClient);
   pnl_info.Color := COR_ITEM;
 
+  { --- barra de progresso na base, de largura inteira (alBottom é
+       resolvido antes dos alLeft, então as colunas ficam acima dela e
+       a barra desaparece da conta quando invisível) --- }
   pbar_item := TProgressBar.Create(Self);
   pbar_item.Name      := Prefixo + 'Progresso';
-  pbar_item.Parent   := pnl_info;
-  pbar_item.Align    := alTop;
-  pbar_item.Height   := ALTURA_BARRA;
-  pbar_item.Min      := 0;
-  pbar_item.Max      := 100;
-  pbar_item.Position := 0;
-  pbar_item.Style    := pbstNormal;
-  pbar_item.Visible  := False;
+  pbar_item.Parent    := Self;
+  pbar_item.Align     := alBottom;
+  pbar_item.Height    := ALTURA_BARRA;
+  pbar_item.Min       := 0;
+  pbar_item.Max       := 100;
+  pbar_item.Position  := 0;
+  pbar_item.Style     := pbstNormal;
+  pbar_item.Visible   := False;
 
   lbl_download := TLabel.Create(Self);
   lbl_download.Name         := Prefixo + 'Download';
@@ -353,6 +441,20 @@ begin
   lbl_formatos.Font.Color  := clGray;
   lbl_formatos.Transparent := True;
 
+  { linha separada de destino: antes ela só aparecia no Hint do resumo do
+    download, e o usuário quer ver a pasta de saída sem precisar passar o
+    mouse. Criada antes da origem para ficar abaixo dela na pilha. }
+  lbl_destino := TLabel.Create(Self);
+  lbl_destino.Name         := Prefixo + 'Destino';
+  lbl_destino.Parent      := pnl_info;
+  lbl_destino.Align       := alTop;
+  lbl_destino.Height      := ALTURA_LINHA;
+  lbl_destino.AutoSize    := False;
+  lbl_destino.Layout      := tlCenter;
+  lbl_destino.Font.Size   := 8;
+  lbl_destino.Font.Color  := RGBToColor(80, 80, 80);
+  lbl_destino.Transparent := True;
+
   lbl_origem := TLabel.Create(Self);
   lbl_origem.Name         := Prefixo + 'Origem';
   lbl_origem.Parent      := pnl_info;
@@ -375,11 +477,33 @@ begin
   lbl_titulo.Font.Size   := 9;
   lbl_titulo.Transparent := True;
 
-  { --- remoção individual --- }
+  { --- miniatura: área fixa, borda arredondada e proporção mantida.
+       É o primeiro alLeft criado, portanto o que fica mais à direita
+       da pilha de colunas. --- }
+  pnl_thumb := TThumbPanel.Create(Self);
+  pnl_thumb.Name       := Prefixo + 'Moldura';
+  pnl_thumb.Caption    := '';
+  pnl_thumb.Parent     := Self;
+  pnl_thumb.Align      := alLeft;
+  pnl_thumb.Width      := LARGURA_THUMB;
+  pnl_thumb.Color      := COR_FUNDO_THUMB;
+
+  img_thumb := TImage.Create(Self);
+  img_thumb.Name         := Prefixo + 'Thumb';
+  img_thumb.Parent       := pnl_thumb;
+  img_thumb.Align        := alClient;
+  img_thumb.AutoSize     := False;
+  img_thumb.Proportional := True;   { mantém a proporção original }
+  img_thumb.Stretch      := False;  { nunca deforma nem invade a moldura }
+  img_thumb.Transparent  := False;
+  img_thumb.Color        := COR_FUNDO_THUMB;
+  img_thumb.BorderSpacing.Around := MARGEM_THUMB;
+
+  { --- remoção individual, entre a miniatura e o status --- }
   btn_remover := TSpeedButton.Create(Self);
   btn_remover.Name         := Prefixo + 'Remover';
   btn_remover.Parent       := Self;
-  btn_remover.Align        := alRight;
+  btn_remover.Align        := alLeft;
   btn_remover.Width        := LARGURA_BOTAO;
   btn_remover.Caption      := 'X';
   btn_remover.Flat         := True;
@@ -389,11 +513,16 @@ begin
   btn_remover.OnClick      := @BtnRemoverClick;
   btn_remover.Hint         := 'Remover este vídeo da fila';
 
-  { --- status no topo da coluna direita, mensagem logo abaixo --- }
-  pnl_status := NovoPainel(Self, Prefixo + 'Status', alRight);
+  { --- status na ponta esquerda: sendo o último alLeft criado, é o que
+       fica mais à esquerda. Coluna de largura fixa, com o selo do estado
+       no topo e a mensagem embaixo — nunca é empurrado pelas
+       informações, que começam depois da miniatura. --- }
+  pnl_status := NovoPainel(Self, Prefixo + 'Status', alLeft);
   pnl_status.Width      := LARGURA_STATUS;
   pnl_status.BevelOuter := bvLowered;
   pnl_status.Color      := RGBToColor(232, 232, 232);
+  pnl_status.Cursor     := crSizeAll;
+  pnl_status.Hint       := 'Arraste para reordenar a fila';
 
   pnl_badge := NovoPainel(pnl_status, Prefixo + 'Selo', alTop);
   pnl_badge.Height := ALTURA_BADGE;
@@ -420,95 +549,38 @@ begin
   lbl_status.Font.Size   := 9;
   lbl_status.Font.Color  := clBlack;
 
-  { --- miniatura: área fixa, borda arredondada e proporção mantida --- }
-  pnl_thumb := TThumbPanel.Create(Self);
-  pnl_thumb.Name       := Prefixo + 'Moldura';
-  pnl_thumb.Caption    := '';
-  pnl_thumb.Parent     := Self;
-  pnl_thumb.Align      := alLeft;
-  pnl_thumb.Width      := LARGURA_THUMB;
-  pnl_thumb.Color      := COR_FUNDO_THUMB;
+  { --- alça de expansão na borda direita (alRight é resolvido antes do
+       alClient, então ocupa a tira à direita das informações) --- }
+  btn_expandir := TSpeedButton.Create(Self);
+  btn_expandir.Name       := Prefixo + 'Expandir';
+  btn_expandir.Parent     := Self;
+  btn_expandir.Align      := alRight;
+  btn_expandir.Width      := LARGURA_EXPANDIR;
+  btn_expandir.Caption    := '+';
+  btn_expandir.Flat       := True;
+  btn_expandir.Font.Size  := 9;
+  btn_expandir.Font.Style := [fsBold];
+  btn_expandir.Color      := clBtnFace;
+  btn_expandir.OnClick    := @BtnExpandirClick;
+  btn_expandir.Hint       := 'Expandir os detalhes do item';
 
-  img_thumb := TImage.Create(Self);
-  img_thumb.Name         := Prefixo + 'Thumb';
-  img_thumb.Parent       := pnl_thumb;
-  img_thumb.Align        := alClient;
-  img_thumb.AutoSize     := False;
-  img_thumb.Proportional := True;   { mantém a proporção original }
-  img_thumb.Stretch      := False;  { nunca deforma nem invade a moldura }
-  img_thumb.Transparent  := False;
-  img_thumb.Color        := COR_FUNDO_THUMB;
-  img_thumb.BorderSpacing.Around := MARGEM_THUMB;
-
-  { --- número / alça de arrastar, na ponta esquerda --- }
-  lbl_indice := TLabel.Create(Self);
-  lbl_indice.Name         := Prefixo + 'Indice';
-  lbl_indice.Parent       := Self;
-  lbl_indice.Align        := alLeft;
-  lbl_indice.Width        := LARGURA_INDICE;
-  lbl_indice.AutoSize     := False;
-  lbl_indice.Layout       := tlCenter;
-  lbl_indice.Alignment    := taCenter;
-  lbl_indice.Font.Style   := [fsBold];
-  lbl_indice.Font.Size    := 9;
-  lbl_indice.Font.Color   := clGray;
-  lbl_indice.Transparent  := True;
-  lbl_indice.Cursor       := crSizeAll;
-  lbl_indice.Hint         := 'Arraste para reordenar a fila';
-
-  { Os rótulos e a miniatura ficariam "furos" para o mouse, impedindo o
-    arraste; por isso repassam os eventos do item. O botão fica de fora
-    para não iniciar um arraste ao ser clicado. }
-  lbl_indice.OnMouseDown  := @ItemMouseDown;
-  lbl_indice.OnMouseMove  := @ItemMouseMove;
-  lbl_indice.OnMouseUp    := @ItemMouseUp;
-  lbl_indice.OnDblClick   := @ItemDblClick;
-
-  pnl_thumb.OnMouseDown   := @ItemMouseDown;
-  pnl_thumb.OnMouseMove   := @ItemMouseMove;
-  pnl_thumb.OnMouseUp     := @ItemMouseUp;
-  pnl_thumb.OnDblClick    := @ItemDblClick;
-
-  img_thumb.OnMouseDown   := @ItemMouseDown;
-  img_thumb.OnMouseMove   := @ItemMouseMove;
-  img_thumb.OnMouseUp     := @ItemMouseUp;
-  img_thumb.OnDblClick    := @ItemDblClick;
-
-  pnl_info.OnMouseDown    := @ItemMouseDown;
-  pnl_info.OnMouseMove    := @ItemMouseMove;
-  pnl_info.OnMouseUp      := @ItemMouseUp;
-  pnl_info.OnDblClick     := @ItemDblClick;
-
-  lbl_titulo.OnMouseDown   := @ItemMouseDown;
-  lbl_titulo.OnMouseMove   := @ItemMouseMove;
-  lbl_titulo.OnMouseUp     := @ItemMouseUp;
-  lbl_origem.OnMouseDown   := @ItemMouseDown;
-  lbl_origem.OnMouseMove   := @ItemMouseMove;
-  lbl_origem.OnMouseUp     := @ItemMouseUp;
-  lbl_formatos.OnMouseDown := @ItemMouseDown;
-  lbl_formatos.OnMouseMove := @ItemMouseMove;
-  lbl_formatos.OnMouseUp   := @ItemMouseUp;
-  lbl_download.OnMouseDown := @ItemMouseDown;
-  lbl_download.OnMouseMove := @ItemMouseMove;
-  lbl_download.OnMouseUp   := @ItemMouseUp;
-
-  pnl_status.OnMouseDown   := @ItemMouseDown;
-  pnl_status.OnMouseMove   := @ItemMouseMove;
-  pnl_status.OnMouseUp     := @ItemMouseUp;
-  pnl_badge.OnMouseDown    := @ItemMouseDown;
-  pnl_badge.OnMouseMove    := @ItemMouseMove;
-  pnl_badge.OnMouseUp      := @ItemMouseUp;
-  lbl_status.OnMouseDown   := @ItemMouseDown;
-  lbl_status.OnMouseMove   := @ItemMouseMove;
-  lbl_status.OnMouseUp     := @ItemMouseUp;
-  lbl_mensagem.OnMouseDown := @ItemMouseDown;
-  lbl_mensagem.OnMouseMove := @ItemMouseMove;
-  lbl_mensagem.OnMouseUp   := @ItemMouseUp;
+  RepassarMouse(pnl_info);
+  RepassarMouse(lbl_titulo);
+  RepassarMouse(lbl_origem);
+  RepassarMouse(lbl_destino);
+  RepassarMouse(lbl_formatos);
+  RepassarMouse(lbl_download);
+  RepassarMouse(pnl_thumb);
+  RepassarMouse(img_thumb);
+  RepassarMouse(pnl_status);
+  RepassarMouse(pnl_badge);
+  RepassarMouse(lbl_status);
+  RepassarMouse(lbl_mensagem);
 end;
 
 procedure TVideoQueueItemView.Atualizar;
 var
-  Texto, Origem, Destino: string;
+  Texto, Origem, Destino, RotuloDestino: string;
 begin
   if not Assigned(FItem) then
     Exit;
@@ -529,19 +601,38 @@ begin
   else
     Destino := '';
 
-  lbl_indice.Caption   := IntToStr(FItem.Indice);
-  lbl_titulo.Caption   := Texto;
+  if Destino <> '' then
+    RotuloDestino := 'Destino: ' + Destino
+  else
+    RotuloDestino := 'Destino: (a definir)';
+
+  { Recolhido, cada linha é truncada com reticências e o Hint guarda o
+    texto inteiro; expandido, o texto corre inteiro porque os rótulos
+    quebram linha. O número da fila entra no título porque a coluna de
+    índice foi retirada do layout. }
+  if FExpandido then
+  begin
+    lbl_titulo.Caption   := IntToStr(FItem.Indice) + '. ' + Texto;
+    lbl_origem.Caption   := Origem;
+    lbl_destino.Caption  := RotuloDestino;
+    lbl_formatos.Caption := FItem.ResumoFormatos;
+    lbl_download.Caption := FItem.ResumoDownload;
+  end
+  else
+  begin
+    lbl_titulo.Caption   := IntToStr(FItem.Indice) + '. ' + Truncar(Texto, 68);
+    lbl_origem.Caption   := Truncar(Origem, 74);
+    lbl_destino.Caption  := Truncar(RotuloDestino, 74);
+    lbl_formatos.Caption := Truncar(FItem.ResumoFormatos, 74);
+    lbl_download.Caption := Truncar(FItem.ResumoDownload, 74);
+  end;
+
   lbl_titulo.Hint      := Texto;
-
-  lbl_origem.Caption   := Truncar(Origem, 74);
   lbl_origem.Hint      := Origem;
-
-  lbl_formatos.Caption := FItem.ResumoFormatos;
+  lbl_destino.Hint     := RotuloDestino;
   lbl_formatos.Hint    := FItem.ResumoFormatos;
-
-  lbl_download.Caption := FItem.ResumoDownload;
   lbl_download.Hint    := FItem.ResumoDownload + LineEnding +
-                         'Destino: ' + Destino;
+                          RotuloDestino;
 
   lbl_status.Caption   := FItem.StatusTexto;
 
@@ -606,11 +697,14 @@ begin
   if Assigned(btn_remover) then
   begin
     btn_remover.Enabled := not FBloqueado;
-    lbl_indice.Cursor   := crDefault;
-    Cursor              := crDefault;
+    { A alça de arraste é a coluna de status: com a fila em processamento
+      ela perde o cursor de mover, como o item inteiro. }
+    if FBloqueado then
+      pnl_status.Cursor := crDefault
+    else
+      pnl_status.Cursor := crSizeAll;
+    Cursor := crDefault;
   end;
-  if not FBloqueado then
-    lbl_indice.Cursor := crSizeAll;
 end;
 
 function TVideoQueueItemView.CorDoPainelDeTextos: TColor;
@@ -700,11 +794,84 @@ begin
     Quadro.RemoverItemPublico(FItem);
 end;
 
+{ Expande/recolhe a área de texto do item. Recolhido, o item mantém a
+  altura compacta e uma linha por informação (truncada com Hint);
+  expandido, os rótulos ganham WordWrap e mostram o texto inteiro. Como
+  a altura muda, a pilha de itens é realinhada no fim. }
+procedure TVideoQueueItemView.BtnExpandirClick(Sender: TObject);
+begin
+  FExpandido := not FExpandido;
+  if FExpandido then
+  begin
+    btn_expandir.Caption := '-';
+    btn_expandir.Hint    := 'Recolher os detalhes do item';
+  end
+  else
+  begin
+    btn_expandir.Caption := '+';
+    btn_expandir.Hint    := 'Expandir os detalhes do item';
+  end;
+
+  { A mudança de Height já realinha os vizinhos: o LCL reordena a pilha
+    de alTop quando os limites de um filho mudam (verificado com o LCL). }
+  AplicarAlturaExpandida;
+  Atualizar;
+end;
+
+procedure TVideoQueueItemView.AplicarAlturaExpandida;
+begin
+  if FExpandido then
+  begin
+    Height := ALTURA_ITEM_EXP;
+    lbl_titulo.Height     := ALTURA_TITULO_EXP;
+    lbl_origem.Height     := ALTURA_LINHA_EXP;
+    lbl_destino.Height    := ALTURA_LINHA_EXP;
+    lbl_formatos.Height   := ALTURA_DETALHE_EXP;
+    lbl_download.Height   := ALTURA_DETALHE_EXP;
+    lbl_titulo.WordWrap   := True;
+    lbl_origem.WordWrap   := True;
+    lbl_destino.WordWrap  := True;
+    lbl_formatos.WordWrap := True;
+    lbl_download.WordWrap := True;
+  end
+  else
+  begin
+    Height := ALTURA_ITEM;
+    lbl_titulo.Height     := ALTURA_TITULO;
+    lbl_origem.Height     := ALTURA_LINHA;
+    lbl_destino.Height    := ALTURA_LINHA;
+    lbl_formatos.Height   := ALTURA_LINHA;
+    lbl_download.Height   := ALTURA_LINHA;
+    lbl_titulo.WordWrap   := False;
+    lbl_origem.WordWrap   := False;
+    lbl_destino.WordWrap  := False;
+    lbl_formatos.WordWrap := False;
+    lbl_download.WordWrap := False;
+  end;
+end;
+
 procedure TVideoQueueItemView.ItemDblClick(Sender: TObject);
 begin
   if (not Assigned(Quadro)) or (not Assigned(FItem)) then
     Exit;
   Quadro.AbrirItemDblClick(Self);
+end;
+
+{ TThumbPoolTask }
+
+{ Roda na thread do pool: não pode criar TBitmap nem tocar na interface.
+  O BMP vai para um arquivo temporário com o sufixo único pedido ao pool;
+  no caso de URL, a mesma chamada devolve o título do vídeo. }
+procedure TThumbPoolTask.Executar;
+begin
+  SaidaBMP := '';
+  Titulo := '';
+  if EhURL then
+    SaidaBMP := TThumbnailService.DoURLParaArquivo(Origem, Largura, Altura,
+                                                   Sufixo, Titulo)
+  else
+    SaidaBMP := TThumbnailService.DoArquivoParaArquivo(Origem, Largura, Altura,
+                                                       Sufixo);
 end;
 
 { TfrVideoQueue }
@@ -713,9 +880,8 @@ constructor TfrVideoQueue.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
-  FViews     := TList.Create;
-  FPendentes := TStringList.Create;
-  FURLsPendentes := TStringList.Create;
+  FViews      := TList.Create;
+  FPool       := TQueuePool.Create(4);
   FArrastando := False;
   FItemArrasto := nil;
   FIndiceDestino := -1;
@@ -747,18 +913,20 @@ destructor TfrVideoQueue.Destroy;
 var
   i: Integer;
 begin
-  FArrastando := False;
+FArrastando := False;
   if Assigned(FFila) then
     FFila.OnAlterado := nil;
 
+  { O timer deve parar antes do pool: sem ele não há callback pendente
+    tocando os painéis durante a destruição. O pool por si não entrega
+    nada na interface — os resultados ficam na lista de concluídos e são
+    libertados aqui a seu tempo. }
   FTimer.Enabled := False;
+  FPool.Free;
 
   for i := 0 to FViews.Count - 1 do
     TVideoQueueItemView(FViews[i]).Free;
   FViews.Free;
-
-  FPendentes.Free;
-  FURLsPendentes.Free;
 
   inherited Destroy;
 end;
@@ -853,29 +1021,40 @@ begin
   AbrirPasta(Alvo);
 end;
 
-function TfrVideoQueue.OrdemDesalinhada: Boolean;
+{ Devolve o primeiro índice em que a lista de visões deixou de casar com
+  o modelo, FViews.Count quando quantidade e ordem estão idênticas, ou -1
+  quando as quantidades diferem. AtualizarGeral usa isso para decidir se
+  basta refrescar os painéis existentes ou se é preciso criar/realinhar
+  visões. }
+function TfrVideoQueue.PrimeiroDesalinhado: Integer;
 var
   i: Integer;
 begin
   if FViews.Count <> FFila.QtItens then
-    Exit(True);
+    Exit(-1);
   for i := 0 to FViews.Count - 1 do
     if TVideoQueueItemView(FViews[i]).Item <> FFila.Item(i) then
-      Exit(True);
-  Result := False;
+      Exit(i);
+  Result := FViews.Count;
 end;
 
 { Os itens usam Align = alTop e o LCL empilha na ordem inversa à de
   criação: o último filho de sb_itens aparece no topo. Por isso a
-  reaplicação da ordem percorre o modelo de trás para frente, para que o
-  primeiro item da fila fique visualmente no alto. }
-procedure TfrVideoQueue.ReaplicarOrdem;
+  reaplicação percorre o modelo de trás para frente, para que o primeiro
+  item da fila fique visualmente no alto. AInicio limita a operação ao
+  trecho que mudou de lugar; o que já está alinhado acima dele não é
+  tocado. }
+procedure TfrVideoQueue.ReaplicarOrdem(AInicio: Integer);
 var
   i: Integer;
   View: TVideoQueueItemView;
 begin
+  if AInicio < 0 then
+    AInicio := 0;
+  if AInicio >= FViews.Count then
+    Exit;
   EsconderMarcador;
-  for i := FViews.Count - 1 downto 0 do
+  for i := FViews.Count - 1 downto AInicio do
   begin
     View := TVideoQueueItemView(FViews[i]);
     View.Parent := nil;
@@ -889,7 +1068,7 @@ var
   i: Integer;
   Item: TVideoQueueItem;
   View: TVideoQueueItemView;
-  Desalinhada: Boolean;
+  PrimeiroFora: Integer;
   Nova: TList;
 begin
   { 1. Remove as visões cujo item saiu do modelo. }
@@ -907,43 +1086,65 @@ begin
       Inc(i);
   end;
 
-  { 2. Descobre se a nova ordem exige reempilhar os painéis. }
-  Desalinhada := OrdemDesalinhada;
+  { 2. Onde a lista de visões já espelha o modelo, nada é reconstruído:
+     uma colagem de 500 links adiciona 500 painéis ao fim sem reescrever
+     os que já existiam, e a janela não pisca a cada notificação. }
+  PrimeiroFora := PrimeiroDesalinhado;
 
-  { 3. Garante um painel por item e monta FViews na ordem do modelo. }
-  Nova := TList.Create;
-  try
-    for i := 0 to FFila.QtItens - 1 do
-    begin
-      Item := FFila.Item(i);
-      View  := ViewDe(Item);
-      if View = nil then
+  { O caminho rápido só vale quando PrimeiroFora = FViews.Count: aí a
+    quantidade é exatamente a do modelo E a ordem bate. Antes isso usava
+    ">=" e quebrava justamente o primeiro item: com 0 visões e 1 item,
+    PrimeiroDesalinhado devolvia 0 e o "0 >= 0" mandava atualizar apenas
+    painéis existentes — que não existem — e a fila nunca aparecia. }
+  if PrimeiroFora = FViews.Count then
+  begin
+    sb_itens.DisableAlign;
+    try
+      for i := 0 to FViews.Count - 1 do
       begin
-        View := TVideoQueueItemView.Create(Self, Self);
-        View.Item   := Item;
-        View.Parent := sb_itens;
-        View.Width  := sb_itens.ClientWidth;
+        View := TVideoQueueItemView(FViews[i]);
+        View.SetBloqueado(FProcessando);
+        View.Atualizar;
       end;
-      Nova.Add(View);
-      View.SetBloqueado(FProcessando);
-      View.Atualizar;
+    finally
+      sb_itens.EnableAlign;
     end;
-    FViews.Assign(Nova);
-  finally
-    Nova.Free;
+  end
+  else
+  begin
+    Nova := TList.Create;
+    try
+      sb_itens.DisableAlign;
+      try
+        for i := 0 to FFila.QtItens - 1 do
+        begin
+          Item := FFila.Item(i);
+          View := ViewDe(Item);
+          if View = nil then
+          begin
+            View := TVideoQueueItemView.Create(Self, Self);
+            View.Item   := Item;
+            View.Parent := sb_itens;
+            View.Width  := sb_itens.ClientWidth;
+          end;
+          View.SetBloqueado(FProcessando);
+          View.Atualizar;
+          Nova.Add(View);
+        end;
+      finally
+        sb_itens.EnableAlign;
+      end;
+      FViews.Assign(Nova);
+    finally
+      Nova.Free;
+    end;
   end;
 
-  { 4. Reempilha se a ordem mudou (adição, remoção ou arrasto). }
-  if Desalinhada then
-    ReaplicarOrdem;
-
-  for i := FPendentes.Count - 1 downto 0 do
-    if not ContidoNaFila(TVideoQueueItem(FPendentes.Objects[i])) then
-      FPendentes.Delete(i);
-
-  for i := FURLsPendentes.Count - 1 downto 0 do
-    if not ContidoNaFila(TVideoQueueItem(FURLsPendentes.Objects[i])) then
-      FURLsPendentes.Delete(i);
+  { 3. Reempilha sempre que algo foi criado ou realinhado: alTop empilha na
+     ordem inversa da criação, e os painéis novos precisam entrar na ordem
+     certa da fila. }
+  if PrimeiroFora <> FViews.Count then
+    ReaplicarOrdem(0);
 
   LargurarItens;
   lbl_vazio.Visible := (FViews.Count = 0);
@@ -975,115 +1176,201 @@ begin
       LARGURA_THUMB_BIT, ALTURA_THUMB_BIT));
 
   { Arquivos locais usam um quadro do próprio vídeo; URLs usam a
-    miniatura publicada pela fonte, baixada sob demanda pelo timer. }
+    miniatura publicada pela fonte, baixada em segundo plano pelo pool. }
   if Item.OrigemLocal then
     EnfileirarMiniatura(Item, Item.ArquivoLocal)
   else
     EnfileirarMiniaturaURL(Item, Item.URL);
 
+  { A notificação do modelo já criou o painel; o representante visual
+    colocado agora precisa pintar sem esperar o pool. }
+  AtualizarItem(Item);
+
   Result := Item;
 end;
 
+{ Adições em lote. O timer fica desligado durante o preparo para o pool
+  não aplicar metade das miniaturas antes da leva inteira estar na fila —
+  nada impede o timer de continuar rodando depois, quando a fila já está
+  completa. Cada bloco engaja um único AtualizarGeral no fim. }
+
 function TfrVideoQueue.AdicionarArquivos(const AArquivos: TStrings): Integer;
+begin
+  if not Assigned(AArquivos) then
+    Exit(0);
+  FTimer.Enabled := False;
+  try
+    Result := FFila.AdicionarArquivos(AArquivos);
+    if Result > 0 then
+      AplicarNovosItens(FFila.QtItens - Result);
+  finally
+    FTimer.Enabled := True;
+  end;
+end;
+
+function TfrVideoQueue.AdicionarURLs(const AURLs: TStrings): Integer;
+begin
+  if not Assigned(AURLs) then
+    Exit(0);
+  FTimer.Enabled := False;
+  try
+    Result := FFila.AdicionarURLs(AURLs);
+    if Result > 0 then
+      AplicarNovosItens(FFila.QtItens - Result);
+  finally
+    FTimer.Enabled := True;
+  end;
+end;
+
+function TfrVideoQueue.AdicionarVarias(const ALista: TStrings): Integer;
+begin
+  if not Assigned(ALista) then
+    Exit(0);
+  FTimer.Enabled := False;
+  try
+    Result := FFila.AdicionarVarias(ALista);
+    if Result > 0 then
+      AplicarNovosItens(FFila.QtItens - Result);
+  finally
+    FTimer.Enabled := True;
+  end;
+end;
+
+{ Dá vista às entradas novas a partir de AInicio: o representante visual
+  aparece na hora e a miniatura real é pedida ao pool em segundo plano. }
+procedure TfrVideoQueue.AplicarNovosItens(AInicio: Integer);
 var
   i: Integer;
   Item: TVideoQueueItem;
 begin
-  Result := 0;
-  if not Assigned(AArquivos) then
+  if AInicio < 0 then
+    AInicio := 0;
+  if AInicio > FFila.QtItens - 1 then
     Exit;
 
-  for i := 0 to AArquivos.Count - 1 do
+  for i := AInicio to FFila.QtItens - 1 do
   begin
-    Item := FFila.AdicionarArquivo(AArquivos[i]);
-    if not Assigned(Item) then
-      Continue;
-
+    Item := FFila.Item(i);
     Item.AtribuirMiniatura(
       TThumbnailService.Representacao(Item.Titulo,
         LARGURA_THUMB_BIT, ALTURA_THUMB_BIT));
-    EnfileirarMiniatura(Item, Item.ArquivoLocal);
-    Inc(Result);
+
+    if Item.OrigemLocal then
+      EnfileirarMiniatura(Item, Item.ArquivoLocal)
+    else
+      EnfileirarMiniaturaURL(Item, Item.URL);
   end;
+
+  AtualizarGeral;
 end;
 
 procedure TfrVideoQueue.EnfileirarMiniatura(AItem: TVideoQueueItem;
                                             const AArquivo: string);
+var
+  Tarefa: TThumbPoolTask;
 begin
   if (not Assigned(AItem)) or (AArquivo = '') then
     Exit;
   if not FileExists(AArquivo) then
     Exit;
-  FPendentes.AddObject(AArquivo, AItem);
+
+  Tarefa := TThumbPoolTask.Create;
+  Tarefa.Item    := AItem;
+  Tarefa.EhURL   := False;
+  Tarefa.Origem  := AArquivo;
+  Tarefa.Sufixo  := FPool.NovoIdentificador;
+  Tarefa.Largura := LARGURA_THUMB_BIT;
+  Tarefa.Altura  := ALTURA_THUMB_BIT;
+  FPool.Enfileirar(Tarefa);
 end;
 
 procedure TfrVideoQueue.EnfileirarMiniaturaURL(AItem: TVideoQueueItem;
                                                const AURL: string);
+var
+  Tarefa: TThumbPoolTask;
 begin
   if (not Assigned(AItem)) or (Trim(AURL) = '') then
     Exit;
-  FURLsPendentes.AddObject(Trim(AURL), AItem);
+
+  Tarefa := TThumbPoolTask.Create;
+  Tarefa.Item    := AItem;
+  Tarefa.EhURL   := True;
+  Tarefa.Origem  := Trim(AURL);
+  Tarefa.Sufixo  := FPool.NovoIdentificador;
+  Tarefa.Largura := LARGURA_THUMB_BIT;
+  Tarefa.Altura  := ALTURA_THUMB_BIT;
+  FPool.Enfileirar(Tarefa);
 end;
 
-{ Resolve uma miniatura por vez: primeiro os arquivos locais já baixados e
-  depois as URLs. A ordem evita que a UI fique travada numa chamada de
-  rede enquanto ha quadros locais disponiveis. }
-procedure TfrVideoQueue.ProcessarMiniaturaPendente;
+{ A interface não vai atrás das miniaturas: os workers entregam o BMP
+  pronto e o timer apenas drena a fila de concluídos. Tudo que envolve
+  TBitmap acontece aqui. Uma falha do worker chega como SaidaBMP vazio e
+  mantém o representante visual no lugar. }
+procedure TfrVideoQueue.ProcessarConcluidos;
 var
-  Item, ItemURL: TVideoQueueItem;
+  Concluidas: TList;
+  i: Integer;
+begin
+  Concluidas := TList.Create;
+  try
+    if FPool.RetirarConcluidos(Concluidas) = 0 then
+      Exit;
+
+    for i := 0 to Concluidas.Count - 1 do
+    begin
+      try
+        AplicarMiniatura(TThumbPoolTask(Concluidas[i]));
+      finally
+        TThumbPoolTask(Concluidas[i]).Free;
+      end;
+    end;
+  finally
+    Concluidas.Free;
+  end;
+end;
+
+procedure TfrVideoQueue.AplicarMiniaturaPublico(ATarefa: TThumbPoolTask);
+begin
+  AplicarMiniatura(ATarefa);
+end;
+
+procedure TfrVideoQueue.AplicarMiniatura(ATarefa: TThumbPoolTask);
+var
+  Item: TVideoQueueItem;
   Miniatura: TBitmap;
 begin
-  if FPendentes.Count > 0 then
-  begin
-    Item := TVideoQueueItem(FPendentes.Objects[0]);
-    if not Assigned(Item) then
-    begin
-      FPendentes.Delete(0);
-      Exit;
-    end;
-
-    Miniatura := TThumbnailService.DoArquivo(FPendentes[0],
-                                             LARGURA_THUMB_BIT, ALTURA_THUMB_BIT);
-    FPendentes.Delete(0);
-
-    if (Miniatura = nil) or (not ContidoNaFila(Item)) then
+  Item := ATarefa.Item;
+  try
+    { O item pode ter saído da fila enquanto o worker trabalhava; a
+      verificação compara ponteiros (ViewDe), sem tocar num item que já
+      não existe mais. }
+    if not ContidoNaFila(Item) then
       Exit;
 
-    Item.AtribuirMiniatura(Miniatura);
+    { A miniatura real substitui o representante que a interface desenhou
+      logo após a inserção. O guard antigo (só aplicava se Miniatura fosse
+      nil) bloqueava justamente a chegada da imagem: o placeholder já
+      ocupava o slot, e AtribuirMiniatura liberta o bitmap anterior. }
+    Miniatura := TThumbnailService.CarregarBMP(ATarefa.SaidaBMP);
+    if Assigned(Miniatura) then
+      Item.AtribuirMiniatura(Miniatura);
+
+    { O título descoberto substitui a URL enquanto o vídeo não é baixado. }
+    if (ATarefa.Titulo <> '') and (Item.Titulo = Item.URL) then
+      Item.Titulo := ATarefa.Titulo;
+
     AtualizarItem(Item);
-    Exit;
+  finally
+    TThumbnailService.ApagarBMP(ATarefa.SaidaBMP);
   end;
-
-  if FURLsPendentes.Count = 0 then
-    Exit;
-
-  ItemURL := TVideoQueueItem(FURLsPendentes.Objects[0]);
-  if not Assigned(ItemURL) then
-  begin
-    FURLsPendentes.Delete(0);
-    Exit;
-  end;
-
-  Miniatura := TThumbnailService.DoURL(FURLsPendentes[0],
-                                       LARGURA_THUMB_BIT, ALTURA_THUMB_BIT);
-  FURLsPendentes.Delete(0);
-
-  { Sem miniatura publicada a fonte, o representante visual permanece. }
-  if (Miniatura = nil) or (not ContidoNaFila(ItemURL)) then
-    Exit;
-
-  ItemURL.AtribuirMiniatura(Miniatura);
-  AtualizarItem(ItemURL);
 end;
 
 procedure TfrVideoQueue.TimerMiniaturasTimer(Sender: TObject);
 begin
-  ProcessarMiniaturaPendente;
+  ProcessarConcluidos;
 end;
 
 procedure TfrVideoQueue.RemoverItem(AItem: TVideoQueueItem);
-var
-  i: Integer;
 begin
   if not Assigned(AItem) then
     Exit;
@@ -1091,14 +1378,9 @@ begin
   if FArrastando and (FItemArrasto = AItem) then
     ConcluirArrasto;
 
-  for i := FPendentes.Count - 1 downto 0 do
-    if TVideoQueueItem(FPendentes.Objects[i]) = AItem then
-      FPendentes.Delete(i);
-
-  for i := FURLsPendentes.Count - 1 downto 0 do
-    if TVideoQueueItem(FURLsPendentes.Objects[i]) = AItem then
-      FURLsPendentes.Delete(i);
-
+  { Nada a tirar das pendências: os workers terminam de gerar a miniatura
+    no arquivo temporário e a AplicarMiniatura a descarta ao ver que o
+    item saiu da fila. }
   FFila.Remover(AItem);
 end;
 
@@ -1136,8 +1418,6 @@ begin
   FArrastando := False;
   FItemArrasto := nil;
   EsconderMarcador;
-  FPendentes.Clear;
-  FURLsPendentes.Clear;
   FFila.Limpar;
 end;
 

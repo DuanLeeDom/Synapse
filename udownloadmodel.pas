@@ -53,6 +53,21 @@ type
 
   TEscolhaFps = (efOriginal, efPersonalizado);
 
+  { Como o usuario controla a qualidade quando ele proprio escolheu um
+    codec. Sao dois controles diferentes, e a interface so pode mostrar
+    um por vez:
+
+      mqQualidade - qualidade constante (CRF no x264, qscale no MJPEG).
+        O usuario diz "quero isto de boa" e o encoder gasta o bitrate
+        que precisar. E o padrao, e o que o HandBrake chama de RF.
+
+      mqTaxaBits - taxa media de bits. O usuario diz "cabe neste tamanho"
+        e o encoder faz o que der com isso. So tem efeito nos encoders
+        que medem: x264, x265 e AV1 bateram no alvo nos testes; VP9
+        andou na direcao certa mas ficou 35% abaixo do pedido, e
+        MJPEG, ProRes e FFV1 ignoraram o numero inteiramente. }
+  TModoQualidadeVideo = (mqQualidade, mqTaxaBits);
+
   { Nome do arquivo de saida. }
   TEscolhaNome = (enAutomatico, enDefinido);
 
@@ -93,6 +108,37 @@ type
     PresetVideo    : string;
     QualidadeAudio : Integer;   { kbps, ou nivel de compressao no FLAC }
 
+    { Falso significa "o usuario ainda nao mexeu neste controle". Enquanto
+      for falso, LimitarQualidade coloca o padrao do codec em vez de
+      aceitar o zero que veio do FillChar. Sem isto a primeira execucao
+      sairia com CRF 0, que e lossless e gera um arquivo gigante sem
+      ninguem ter pedido. O 0 continua valendo como escolha do usuario:
+      so o semaforo distingue "escolhi 0" de "nada escolhido". }
+    QualidadeVideoDefinida : Boolean;
+    QualidadeAudioDefinida : Boolean;
+
+    { Qualidade constante ou taxa de bits, escolhido pelo usuario quando
+      ele trocou o codec de original para algo que recodifica. }
+    ModoQualidadeVideo : TModoQualidadeVideo;
+    { So usado quando ModoQualidadeVideo = mqTaxaBits. Em kbps, que e a
+      unidade que o usuario le no controle e que o -b:v aceita com o
+      sufixo k. }
+    TaxaBitsVideo : Integer;
+    { Idem como QualidadeVideoDefinida: separa "o usuario ainda nao
+      escolheu, use o padrao do codec" de "o usuario digitou este
+      valor, respeite". Sem isto, trocar de H.264 para AV1 reescreveria
+      a escolha dele sem ele ver. }
+    TaxaBitsVideoDefinida : Boolean;
+
+    { --- audio ---
+      Nao existe o par de modos que existe no video. Aqui o proprio codec
+      ja diz qual e o controle: AAC, MP3, Opus e Vorbis usam bitrate
+      (caBitrate, que grava -b:a em kbps), FLAC e ALAC usam qualidade
+      constante (caQualidade, -q:a) e WAV usa nivel de compressao. O
+      campo QualidadeAudio, acima, carrega a unidade certa para cada
+      caso, entao "taxa de bits personalizada" para audio ja esta
+      coberta por ele. }
+
     { --- metadados --- }
     EmbedMiniatura  : Boolean;
     EmbedMetadados  : Boolean;
@@ -123,6 +169,10 @@ type
     class function ContainersDisponiveis(const AOp: TDownloadOpcoes): TStringList;
     class function CodecsVideoDisponiveis(const AOp: TDownloadOpcoes): TStringList;
     class function CodecsAudioDisponiveis(const AOp: TDownloadOpcoes): TStringList;
+    { Taxas de quadros oferecidas no controle. O yt-dlp nao troca fps, so
+      escolhe a rendition que o site publicou; recodificar para outro
+      numero de quadros e tarefa do FFmpeg. }
+    class function FpsDisponiveis: TStringList;
 
     { --- coerencia --- }
 
@@ -136,12 +186,25 @@ type
     { Trava os numeros nas faixas que o encoder aceita de verdade. }
     class procedure LimitarQualidade(var AOp: TDownloadOpcoes);
 
+    { A interface so deve mostrar o par "Qualidade constante /
+      Taxa de bits" quando o metodo ja vai recodificar, ha video, e o
+      encoder escolhido obedece -b:v. Nos demais casos nao ha o que
+      alternar e o controle some, em vez de ficar la mentindo. }
+    class function PodeEscolherTaxaBits(const AOp: TDownloadOpcoes): Boolean;
+
     { --- nomes e caminhos --- }
     class function ExtensaoFinal(const AOp: TDownloadOpcoes): string;
     class function ExtensaoIntermediaria: string;
-    class function NomeBase(const AOp: TDownloadOpcoes): string;
+    { ABase e o nome que o yt-dlp deu ao arquivo baixado (o titulo). So e
+      usado quando a escolha e automatica; com nome definido vale sempre o
+      que o usuario digitou. }
+    class function NomeBase(const AOp: TDownloadOpcoes;
+      const ABase: string): string;
     class function CaminhoIntermediario(const AOp: TDownloadOpcoes): string;
-    class function CaminhoFinal(const AOp: TDownloadOpcoes): string;
+    { Caminho do arquivo final. Com nome automatico, ABase e o nome-base do
+      arquivo que o yt-dlp gerou, e a conversao so troca a extensao. }
+    class function CaminhoFinal(const AOp: TDownloadOpcoes;
+      const ABase: string): string;
     class function PastaTemporaria(const AOp: TDownloadOpcoes): string;
 
     { --- comandos --- }
@@ -172,6 +235,13 @@ const
   { Pasta onde o MKV intermediario fica. Um ponto no nome mantem a pasta
     escondida em Explorador de Arquivos e a separa dos arquivos do usuario. }
   NOME_TEMP = '.synapse_download';
+
+  { Nome que o yt-dlp da ao arquivo quando ninguem define -o: o titulo com
+    o id do video. O id e o que mantem nomes unicos mesmo quando dois
+    videos compartilham o titulo, e e este nome-base que a conversao
+    preserva. Trocar o formato nao pode explodir este padrao, senao o
+    arquivo convertido sairia com um nome diferente do baixado. }
+  PADRAO_NOME_YTDLP = '%(title)s [%(id)s].%(ext)s';
 
   { Argumentos que o yt-dlp recebe sempre. }
   { --newline e --progress: sem isso o yt-dlp desenha a barra com CR e o
@@ -384,6 +454,15 @@ begin
       Result.Add(TGerenciadorCatalogo.RotuloCodecAudio(a));
 end;
 
+class function TGerenciadorDownload.FpsDisponiveis: TStringList;
+var
+  i: Integer;
+begin
+  Result := TStringList.Create;
+  for i := Low(FPS_VALIDOS) to High(FPS_VALIDOS) do
+    Result.Add(IntToStr(FPS_VALIDOS[i]) + ' fps');
+end;
+
 class function TGerenciadorDownload.ExigeFFmpeg(
   const AOp: TDownloadOpcoes): Boolean;
 begin
@@ -473,13 +552,17 @@ begin
     try
       if cands.Count > 0 then
       begin
+        { O primeiro da lista ja e uma combinacao valida com os codecs
+          atuais. Repara que cands so tem os rotulos dos containers que
+          passaram no filtro, entao o indice de la nao serve para
+          reconstruir o enum: a conversao e feita pelo rotulo. }
         n := cands.IndexOf(TGerenciadorCatalogo.RotuloContainer(AOp.Container));
         if n < 0 then
           n := 0;
-        if cands[n] <> TGerenciadorCatalogo.RotuloContainer(AOp.Container)
-        then
+        if not SameText(cands[n],
+                        TGerenciadorCatalogo.RotuloContainer(AOp.Container)) then
         begin
-          AOp.Container := TGerenciadorCatalogo.Container(n);
+          AOp.Container := TGerenciadorCatalogo.ContainerPorRotulo(cands[n]);
           mudou := True;
           Inc(Result);
         end;
@@ -564,25 +647,82 @@ end;
 class procedure TGerenciadorDownload.LimitarQualidade(var AOp: TDownloadOpcoes);
 var
   lo, hi, pad: Integer;
+  tbLo, tbHi, tbPad: Integer;
 begin
   if TGerenciadorCatalogo.FaixaVideo(AOp.CodecVideo, lo, hi, pad) then
   begin
+    { Ainda nao escolhido: usa o padrao do codec, nao o zero. Uma vez que
+      o usuario mexeu, o zero e uma escolha e tem de ser respeitada. }
+    if not AOp.QualidadeVideoDefinida then
+      AOp.QualidadeVideo := pad;
+
     if AOp.QualidadeVideo < lo then AOp.QualidadeVideo := lo;
     if AOp.QualidadeVideo > hi then AOp.QualidadeVideo := hi;
   end
   else
+  begin
+    { Codec sem faixa (original, perfil): o numero nao significa nada e
+      volta a servir de "nao escolhido" para o proximo codec. }
     AOp.QualidadeVideo := 0;
+    AOp.QualidadeVideoDefinida := False;
+  end;
+
+  { --- taxa de bits do video --- }
+  if TGerenciadorCatalogo.FaixaTaxaBits(AOp.CodecVideo, tbLo, tbHi, tbPad) then
+  begin
+    { Escolher taxa de bits so faz sentido se o encoder obedece. Se o
+      usuario estava em taxa de bits e trocou para um codec que ignora
+      -b:v, o modo volta para qualidade constante: manter o outro seria
+      mostrar um controle que nao vai fazer nada. }
+    if AOp.ModoQualidadeVideo = mqTaxaBits then
+    begin
+      if not AOp.TaxaBitsVideoDefinida then
+        AOp.TaxaBitsVideo := tbPad;
+      if AOp.TaxaBitsVideo < tbLo then AOp.TaxaBitsVideo := tbLo;
+      if AOp.TaxaBitsVideo > tbHi then AOp.TaxaBitsVideo := tbHi;
+    end;
+  end
+  else
+    AOp.ModoQualidadeVideo := mqQualidade;
+
+  { Sem recodificar nao ha qualidade para escolher de nenhum dos dois
+    jeitos. }
+  if AOp.CodecVideo = cvOriginal then
+    AOp.ModoQualidadeVideo := mqQualidade;
 
   if TGerenciadorCatalogo.FaixaAudio(AOp.CodecAudio, lo, hi, pad) then
   begin
+    if not AOp.QualidadeAudioDefinida then
+      AOp.QualidadeAudio := pad;
+
     if AOp.QualidadeAudio < lo then AOp.QualidadeAudio := lo;
     if AOp.QualidadeAudio > hi then AOp.QualidadeAudio := hi;
   end
   else
+  begin
     AOp.QualidadeAudio := 0;
+    AOp.QualidadeAudioDefinida := False;
+  end;
+
+  { --- taxa de bits do audio ---
+    Nao ha nada a fazer aqui. O codec ja escolhe a unidade: caBitrate
+    grava -b:a em kbps usando o proprio QualidadeAudio, e os demais nem
+    aceitam bitrate. Colocar um segundo campo seria ter dois numeros
+    dizendo a mesma coisa, so que um deles enganoso. }
 
   if (AOp.ProfileProRes < 0) or (AOp.ProfileProRes > 4) then
     AOp.ProfileProRes := 2;
+end;
+
+class function TGerenciadorDownload.PodeEscolherTaxaBits(
+  const AOp: TDownloadOpcoes): Boolean;
+begin
+  { Mesma condicao de escolher codec, mais o encoder ter medido certo
+    quando testado. H.264, H.265 e AV1 passam; VP9 falhou por 35% no
+    alvo e os outros nem olharam para o numero. }
+  Result := PodeEscolherCodecVideo(AOp) and
+            (AOp.CodecVideo <> cvOriginal) and
+            TGerenciadorCatalogo.AceitaTaxaBits(AOp.CodecVideo);
 end;
 
 { ------------------------------------------------------------------------ }
@@ -601,10 +741,16 @@ begin
 end;
 
 class function TGerenciadorDownload.NomeBase(
-  const AOp: TDownloadOpcoes): string;
+  const AOp: TDownloadOpcoes; const ABase: string): string;
 begin
+  { Automatico preserva o nome que o yt-dlp gerou (o titulo), exatamente
+    como saiu: ele ja foi limpo pelo proprio yt-dlp para o sistema de
+    arquivos, e passar de novo por SemAcento aqui reescreveria o texto que
+    o usuario espera. So o nome escolhido a mao e normalizado. }
   if AOp.EscolhaNome = enDefinido then
     Result := SemAcento(AOp.Nome)
+  else if ABase <> '' then
+    Result := ABase
   else
     Result := 'download';
   if Result = '' then
@@ -620,19 +766,25 @@ end;
 class function TGerenciadorDownload.CaminhoIntermediario(
   const AOp: TDownloadOpcoes): string;
 begin
+  { Com nome definido este caminho e exato: a fase 1 escreve la. No nome
+    automatico o arquivo sai com o titulo, que so existe depois do download;
+    por isso o executor procura o arquivo recem-chegado na pasta temporaria
+    e usa o caminho real, em vez desta previsao. }
   Result := IncludeTrailingPathDelimiter(PastaTemporaria(AOp)) +
-            NomeBase(AOp) + '.' + ExtensaoIntermediaria;
+            NomeBase(AOp, '') + '.' + ExtensaoIntermediaria;
 end;
 
 class function TGerenciadorDownload.CaminhoFinal(
-  const AOp: TDownloadOpcoes): string;
+  const AOp: TDownloadOpcoes; const ABase: string): string;
 var
   ext: string;
 begin
   ext := ExtensaoFinal(AOp);
-  { No metodo simples o container escolhido pode ser diferente do que o
-    site ofereceu; nesse caso o --remux-video faz o renome. }
-  Result := IncludeTrailingPathDelimiter(AOp.Pasta) + NomeBase(AOp) + '.' + ext;
+  { No nome automatico, ABase e o nome que o yt-dlp deu ao arquivo baixado:
+    a conversao so troca a extensao e preserva o titulo. Com nome definido
+    o ABase e ignorado e vale sempre o nome digitado. }
+  Result := IncludeTrailingPathDelimiter(AOp.Pasta) + NomeBase(AOp, ABase) +
+            '.' + ext;
 end;
 
 { ------------------------------------------------------------------------ }
@@ -702,8 +854,15 @@ begin
     Result.Add('--merge-output-format');
     Result.Add(ExtensaoIntermediaria);
     Result.Add('-o');
-    Result.Add(IncludeTrailingPathDelimiter(PastaTemporaria(AOp)) +
-               NomeBase(AOp) + '.%(ext)s');
+    { No nome automatico o intermediario sai com o nome que o yt-dlp
+      escolheria (titulo com id), porque e este nome-base que a fase 2
+      vai preservar no arquivo final. }
+    if AOp.EscolhaNome = enDefinido then
+      Result.Add(IncludeTrailingPathDelimiter(PastaTemporaria(AOp)) +
+                 SemAcento(AOp.Nome) + '.%(ext)s')
+    else
+      Result.Add(IncludeTrailingPathDelimiter(PastaTemporaria(AOp)) +
+                 PADRAO_NOME_YTDLP);
   end
   else
   begin
@@ -711,10 +870,13 @@ begin
     Result.Add('-P');
     Result.Add(AOp.Pasta);
     Result.Add('-o');
+    { Automatico usa exatamente o nome que o yt-dlp usaria por padrao, com
+      o id do video: dois titulos iguais nao colidem e nada e renomeado
+      depois do download. }
     if AOp.EscolhaNome = enDefinido then
       Result.Add(SemAcento(AOp.Nome) + '.%(ext)s')
     else
-      Result.Add('%(title)s.%(ext)s');
+      Result.Add(PADRAO_NOME_YTDLP);
 
     { Trocar de container sem reencodificar e trabalho do yt-dlp, e nao do
       FFmpeg: o --remux-video so troca as cabecalhas e nao toca num quadro.
@@ -781,6 +943,7 @@ end;
 function GrafoVideo(const AOp: TDownloadOpcoes): string;
 var
   partes: TStringList;
+  i: Integer;
 begin
   Result := '';
   partes := TStringList.Create;
@@ -800,7 +963,16 @@ begin
       if AOp.FpsValor > 0 then
         partes.Add('fps=' + IntToStr(AOp.FpsValor));
 
-    Result := StringReplace(partes.Text, #10, ',', [rfReplaceAll]);
+    { Nao usar partes.Text: ele junta com LineEnding, que no Windows tem um
+      #13 na frente, e o FFmpeg recebe 'escala=<CR>,fps=30'. O separador do
+      -vf e a virgula, sem nada em volta. }
+    Result := '';
+    for i := 0 to partes.Count - 1 do
+    begin
+      if i > 0 then
+        Result := Result + ',';
+      Result := Result + partes[i];
+    end;
   finally
     partes.Free;
   end;
@@ -861,15 +1033,28 @@ begin
     case TGerenciadorCatalogo.ControleVideo(AOp.CodecVideo) of
       cvCRF:
         begin
-          Result.Add('-crf');
-          Result.Add(IntToStr(AOp.QualidadeVideo));
-          { VP9 so obedece ao CRF quando o bitrate e liberado. Sem esta
-            opcao ele ignora o CRF e limpa por taxa, o que produz um
-            arquivo muito maior do que o numero escolhido sugere. }
-          if TGerenciadorCatalogo.ExigeBZero(AOp.CodecVideo) then
+          { Os dois controles do video nao andam juntos: ou o usuario
+            diz qual a qualidade e o encoder escolhe o tamanho, ou diz
+            o tamanho e o encoder escolhe a qualidade. Neste segundo
+            caso o -crf some, porque mandar as duas coisas e pedir para
+            o encoder ignorar uma delas. }
+          if AOp.ModoQualidadeVideo = mqTaxaBits then
           begin
             Result.Add('-b:v');
-            Result.Add('0');
+            Result.Add(IntToStr(AOp.TaxaBitsVideo) + 'k');
+          end
+          else
+          begin
+            Result.Add('-crf');
+            Result.Add(IntToStr(AOp.QualidadeVideo));
+            { VP9 so obedece ao CRF quando o bitrate e liberado. Sem esta
+              opcao ele ignora o CRF e limpa por taxa, o que produz um
+              arquivo muito maior do que o numero escolhido sugere. }
+            if TGerenciadorCatalogo.ExigeBZero(AOp.CodecVideo) then
+            begin
+              Result.Add('-b:v');
+              Result.Add('0');
+            end;
           end;
         end;
       cvQScale:
@@ -950,6 +1135,11 @@ end;
 class function TGerenciadorDownload.RotuloQualidadeVideo(
   const AOp: TDownloadOpcoes): string;
 begin
+  { Em modo taxa de bits o controle vira um slider de kbps, seja qual for
+    o codec. So os encoders que medem -b:v chegam aqui de verdade, porque
+    PodeEscolherTaxaBits ja esconde o resto. }
+  if AOp.ModoQualidadeVideo = mqTaxaBits then
+    Exit('Taxa (kbps)');
   case TGerenciadorCatalogo.ControleVideo(AOp.CodecVideo) of
     cvCRF:        Result := 'CRF';
     cvQScale:     Result := 'Escala JPEG';
@@ -981,16 +1171,35 @@ begin
     Exit('sem recodificar');
 
   v := AOp.QualidadeVideo;
+  if AOp.ModoQualidadeVideo = mqTaxaBits then
+  begin
+    { Formatar o kbps do jeito que o usuario le: 8000 mostra "8 Mbps"
+      quando passar de mil, senao "512 kbps". }
+    Result := IntToStr(AOp.TaxaBitsVideo) + ' kbps';
+    if AOp.TaxaBitsVideo >= 1000 then
+      Result := FormatFloat('0.#', AOp.TaxaBitsVideo / 1000) + ' Mbps';
+  end
+  else
   case TGerenciadorCatalogo.ControleVideo(AOp.CodecVideo) of
     cvCRF:
       begin
         Result := 'CRF ' + IntToStr(v);
+        { CRF 0 e lossless e 51 e o pior aceitavel, entao no x264 e no
+          VP9 o numero pequeno e o melhor. O catalogo diz qual e o sentido
+          porque nem todo controle anda nessa direcao. }
         if TGerenciadorCatalogo.MenorMelhorVideo(AOp.CodecVideo) then
           Result := Result + ' (menor e melhor)'
         else
-          Result := Result + ' (menor e melhor)';
+          Result := Result + ' (maior e melhor)';
       end;
-    cvQScale:      Result := 'qscale ' + IntToStr(v) + ' (menor e melhor)';
+    cvQScale:
+      begin
+        Result := 'qscale ' + IntToStr(v);
+        if TGerenciadorCatalogo.MenorMelhorVideo(AOp.CodecVideo) then
+          Result := Result + ' (menor e melhor)'
+        else
+          Result := Result + ' (maior e melhor)';
+      end;
     cvPerfil:      Result := 'perfil ' + IntToStr(AOp.ProfileProRes);
     cvCompressao:  Result := 'nivel ' + IntToStr(v);
   else

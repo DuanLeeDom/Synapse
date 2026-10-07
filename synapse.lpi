@@ -89,6 +89,11 @@
         <UnitName Value="uVideoQueue"/>
       </Unit>
       <Unit>
+        <Filename Value="uqueuepool.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uQueuePool"/>
+      </Unit>
+      <Unit>
         <Filename Value="uvideoqueueview.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frVideoQueue"/>

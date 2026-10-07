@@ -1020,10 +1020,9 @@ begin
       Exit;
     end;
 
-    Qt := 0;
-    for i := 0 to Lista.Count - 1 do
-      if FVideoQueue.Adicionar(Lista[i]) <> nil then
-        Inc(Qt);
+    { Adição única em lote: a view constrói os painéis novos de uma vez
+      e anima o timer só depois, em vez de notificar a cada entrada. }
+    Qt := FVideoQueue.AdicionarVarias(Lista);
 
     if Qt = 0 then
     begin
@@ -1169,8 +1168,12 @@ end;
 
 function TfrMediaPipeline.NomePrefixoParaItem(AItem: TVideoQueueItem): string;
 begin
+  { Em modo "YT-DLP" o prefixo vazio diz ao resto do fluxo para preservar o
+    nome que o yt-dlp gerou (titulo): o destino sai do proprio arquivo
+    baixado, so trocando a extensao. Um literal aqui renomearia o video
+    para algo que o usuario nunca pediu. }
   if rbtm_ytdlp.Checked then
-    Result := 'ORIGINAL_YTDLP'
+    Result := ''
   else if rbtm_padrao.Checked then
     Result := 'editor_ready_' + FormatDateTime('yyyy_mm_dd_hhnnss', Now) +
               '_' + GerarIDAleatorio(8)
@@ -1725,8 +1728,14 @@ begin
   AItem.Mensagem := 'Convertendo...';
   FVideoQueue.AtualizarItem(AItem);
 
-  LogLinha(Format('[FASE 2] FFmpeg — %d arquivo(s) em %s',
-    [TotalArquivos, AItem.NomePrefixo]));
+  { Rotulo do log: no modo "YT-DLP" o prefixo e vazio e o que vale e o nome
+    original do primeiro arquivo baixado. }
+  if AItem.NomePrefixo = '' then
+    LogLinha(Format('[FASE 2] FFmpeg — %d arquivo(s) com nome original do yt-dlp',
+      [TotalArquivos]))
+  else
+    LogLinha(Format('[FASE 2] FFmpeg — %d arquivo(s) em %s',
+      [TotalArquivos, AItem.NomePrefixo]));
 
   AlgumOK := False;
 
@@ -1900,7 +1909,8 @@ begin
     'Nomeação Personalizada: Habilita o campo de texto para definir o nome manualmente.',
     0, -10, 50);
   FAssistant.AddHelp(rbtm_ytdlp,
-    'Padrão Original: Mantém o nome definido pelo yt-dlp (título extraído da fonte).',
+    'Padrão Original: Mantém o nome que o yt-dlp deu ao arquivo (título extraído ' +
+    'da fonte); a conversão preserva esse nome, trocando apenas a extensão.',
     0, -10, 50);
   FAssistant.AddHelp(rbtm_naoSubstituir,
     'Preservar Originais: Interrompe o processo se o arquivo de destino já existir.',

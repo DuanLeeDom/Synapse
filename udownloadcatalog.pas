@@ -101,6 +101,20 @@ type
     QPadrao     : Integer;
     QMenorMelhor: Boolean;
     ExigeBZero  : Boolean;     { VP9 so respeita CRF com -b:v 0 }
+    { Este encoder obedece -b:v? Medido com uma fonte de 30s pedindo
+      2000k: x264 chegou a 1994k, x265 a 2012k e AV1 a 2123k, os tres
+      dentro da margem que o usuario espera. VP9 pediu 2000k e entregou
+      1283k, e repetiu o mesmo desvio em 500k, 1000k e 4000k: anda na
+      direcao certa, mas nunca chega. MJPEG, ProRes e FFV1 simplesmente
+      ignoraram o numero e gravaram o que quiseram. So os tres que
+      batem no alvo recebem o controle de taxa de bits. }
+    AceitaTaxaBits: Boolean;
+    { Faixa do slider de taxa de bits, em kbps. Min e o piso que faz
+      sentido pro encoder, Max e o teto alem do qual nao vale a pena
+      ir, e Padrao e onde o controle nasce. }
+    TbMin        : Integer;
+    TbMax        : Integer;
+    TbPadrao     : Integer;
     Presets     : string;      { lista separada por ';' }
     Obs         : string;
   end;
@@ -131,6 +145,11 @@ type
     class function TotalContainers: Integer;
     class function Container(AInd: Integer): TContainer;
     class function RotuloContainer(ACont: TContainer): string;
+    { Rotulo de volta ao enum. Existe porque a lista de containers
+      disponiveis e filtrada: o indice dentro dela nao e o numero do enum,
+      entao converter o indice com TContainer(n) devolve um container
+      errado. Pelo rotulo a procura e sempre certa. }
+    class function ContainerPorRotulo(const ARotulo: string): TContainer;
     class function ExtensaoContainer(ACont: TContainer): string;
     class function SomenteAudio(ACont: TContainer): Boolean;
     class function ContainerAceitaVideo(ACont: TContainer;
@@ -148,11 +167,22 @@ type
     class function TotalCodecsVideo: Integer;
     class function CodecVideo(AInd: Integer): TCodecVideo;
     class function RotuloCodecVideo(ACodec: TCodecVideo): string;
+    { Rotulo de volta ao enum. Mesmo motivo do ContainerPorRotulo: a lista
+      de codecs oferecidos e filtrada, e o indice dela nao e o ordinal. }
+    class function CodecVideoPorRotulo(const ARotulo: string): TCodecVideo;
     class function EncoderVideo(ACodec: TCodecVideo): string;
     class function ControleVideo(ACodec: TCodecVideo): TControleVideo;
     class function FaixaVideo(ACodec: TCodecVideo; out AMin, AMax,
       APadrao: Integer): Boolean;
     class function MenorMelhorVideo(ACodec: TCodecVideo): Boolean;
+    { Este encoder obedece -b:v? A interface so mostra o controle de taxa
+      de bits quando a resposta e True. }
+    class function AceitaTaxaBits(ACodec: TCodecVideo): Boolean;
+    { Faixa do slider de taxa de bits, em kbps. So devolve True quando
+      AceitaTaxaBits; nos demais casos zera a saida para que a interface
+      nunca fique com um intervalo antigo na mao. }
+    class function FaixaTaxaBits(ACodec: TCodecVideo; out AMin, AMax,
+      APadrao: Integer): Boolean;
     class function PresetsVideo(ACodec: TCodecVideo): TStringList;
     class function ExigeBZero(ACodec: TCodecVideo): Boolean;
     class function ObsVideo(ACodec: TCodecVideo): string;
@@ -161,6 +191,7 @@ type
     class function TotalCodecsAudio: Integer;
     class function CodecAudio(AInd: Integer): TCodecAudio;
     class function RotuloCodecAudio(ACodec: TCodecAudio): string;
+    class function CodecAudioPorRotulo(const ARotulo: string): TCodecAudio;
     class function EncoderAudio(ACodec: TCodecAudio): string;
     class function ControleAudio(ACodec: TCodecAudio): TControleAudio;
     class function FaixaAudio(ACodec: TCodecAudio; out AMin, AMax,
@@ -229,12 +260,15 @@ const
   CAT_VIDEO: array[TCodecVideo] of TInfoCodecVideo = (
     (Rotulo: 'Original (sem recodificar)'; Encoder: 'copy';
      Controle: cvSemControle; QMin: 0; QMax: 0; QPadrao: 0;
-     QMenorMelhor: False; ExigeBZero: False; Presets: '';
+     QMenorMelhor: False; ExigeBZero: False;
+     AceitaTaxaBits: False; TbMin: 0; TbMax: 0; TbPadrao: 0;
+     Presets: '';
      Obs: 'Baixa o stream como o site publicou. Nao e possivel escolher '
           + 'resolucao, fps ou qualidade: o que existe e o que vem.'),
     (Rotulo: 'H.264 / AVC'; Encoder: 'libx264';
      Controle: cvCRF; QMin: 0; QMax: 51; QPadrao: 23;
-     QMenorMelhor: False; ExigeBZero: False;
+     QMenorMelhor: True; ExigeBZero: False;
+     AceitaTaxaBits: True; TbMin: 100; TbMax: 20000; TbPadrao: 8000;
      Presets: 'ultrafast;superfast;veryfast;faster;fast;medium;slow;slower;veryslow';
      Obs: 'CRF 0 e sem perda, 51 e o pior aceitavel. O FFmpeg aceita '
           + 'valores acima de 51 e corrige sozinho, entao o limite da '
@@ -242,37 +276,43 @@ const
           + 'que o usuario digitou.'),
     (Rotulo: 'H.265 / HEVC'; Encoder: 'libx265';
      Controle: cvCRF; QMin: 0; QMax: 51; QPadrao: 26;
-     QMenorMelhor: False; ExigeBZero: False;
+     QMenorMelhor: True; ExigeBZero: False;
+     AceitaTaxaBits: True; TbMin: 100; TbMax: 20000; TbPadrao: 5000;
      Presets: 'ultrafast;superfast;veryfast;faster;fast;medium;slow;slower';
      Obs: 'Metade do tamanho do H.264 na mesma aparencia. Encodificar e '
           + 'bem mais lento que H.264.'),
     (Rotulo: 'VP9'; Encoder: 'libvpx-vp9';
      Controle: cvCRF; QMin: 0; QMax: 63; QPadrao: 31;
-     QMenorMelhor: False; ExigeBZero: True;
+     QMenorMelhor: True; ExigeBZero: True;
+     AceitaTaxaBits: False; TbMin: 0; TbMax: 0; TbPadrao: 0;
      Presets: '';
      Obs: 'Faixa de CRF vai ate 63, e nao 51. Sem -b:v 0 o VP9 ignora o '
           + 'CRF e passa a limpar por taxa de bits.'),
     (Rotulo: 'AV1'; Encoder: 'libsvtav1';
      Controle: cvCRF; QMin: 0; QMax: 63; QPadrao: 35;
-     QMenorMelhor: False; ExigeBZero: False;
+     QMenorMelhor: True; ExigeBZero: False;
+     AceitaTaxaBits: True; TbMin: 100; TbMax: 20000; TbPadrao: 4000;
      Presets: '6;8;10;12';
      Obs: 'O mais compacto dos quatro, e de longe o mais lento de '
           + 'encodificar. Vale para arquivos que ficam parados.'),
     (Rotulo: 'MJPEG'; Encoder: 'mjpeg';
      Controle: cvQScale; QMin: 2; QMax: 31; QPadrao: 5;
      QMenorMelhor: True; ExigeBZero: False;
+     AceitaTaxaBits: False; TbMin: 0; TbMax: 0; TbPadrao: 0;
      Presets: '';
      Obs: 'Escala invertida: aqui o numero pequeno e a melhor qualidade. '
           + 'Um JPEG por quadro, entao o arquivo fica muito grande.'),
     (Rotulo: 'ProRes'; Encoder: 'prores_ks';
      Controle: cvPerfil; QMin: 0; QMax: 4; QPadrao: 2;
      QMenorMelhor: False; ExigeBZero: False;
+     AceitaTaxaBits: False; TbMin: 0; TbMax: 0; TbPadrao: 0;
      Presets: '';
      Obs: 'Codec de edicao. Nao aceita CRF: o controle e o perfil, que '
           + 'escolhe entre Proxy, LT, 422, HQ e 4444. So entra em MOV e MKV.'),
     (Rotulo: 'FFV1'; Encoder: 'ffv1';
      Controle: cvCompressao; QMin: 0; QMax: 8; QPadrao: 3;
      QMenorMelhor: False; ExigeBZero: False;
+     AceitaTaxaBits: False; TbMin: 0; TbMax: 0; TbPadrao: 0;
      Presets: '';
      Obs: 'Sem perda, para guarda. O nivel 3 ja usa compressao suficiente '
           + 'para uso normal e so faz sentido no que for copia literal.')
@@ -348,6 +388,18 @@ class function TGerenciadorCatalogo.RotuloContainer(
   ACont: TContainer): string;
 begin
   Result := CAT_CONTAINERS[ACont].Rotulo;
+end;
+
+class function TGerenciadorCatalogo.ContainerPorRotulo(
+  const ARotulo: string): TContainer;
+var
+  c: TContainer;
+begin
+  for c := Low(TContainer) to High(TContainer) do
+    if SameText(CAT_CONTAINERS[c].Rotulo, ARotulo) then
+      Exit(c);
+  { Nao achou: mantem o que ja estava, que e melhor que inventar um. }
+  Result := Low(TContainer);
 end;
 
 class function TGerenciadorCatalogo.ExtensaoContainer(
@@ -432,6 +484,18 @@ begin
   Result := CAT_VIDEO[ACodec].Rotulo;
 end;
 
+class function TGerenciadorCatalogo.CodecVideoPorRotulo(
+  const ARotulo: string): TCodecVideo;
+var
+  c: TCodecVideo;
+begin
+  for c := Low(TCodecVideo) to High(TCodecVideo) do
+    if SameText(CAT_VIDEO[c].Rotulo, ARotulo) then
+      Exit(c);
+  { Nao achou: o "Original" e a resposta segura, porque nao recodifica. }
+  Result := cvOriginal;
+end;
+
 class function TGerenciadorCatalogo.EncoderVideo(ACodec: TCodecVideo): string;
 begin
   Result := CAT_VIDEO[ACodec].Encoder;
@@ -468,6 +532,26 @@ class function TGerenciadorCatalogo.MenorMelhorVideo(
   ACodec: TCodecVideo): Boolean;
 begin
   Result := CAT_VIDEO[ACodec].QMenorMelhor;
+end;
+
+class function TGerenciadorCatalogo.AceitaTaxaBits(
+  ACodec: TCodecVideo): Boolean;
+begin
+  Result := CAT_VIDEO[ACodec].AceitaTaxaBits;
+end;
+
+class function TGerenciadorCatalogo.FaixaTaxaBits(ACodec: TCodecVideo;
+  out AMin, AMax, APadrao: Integer): Boolean;
+begin
+  AMin    := 0;
+  AMax    := 0;
+  APadrao := 0;
+  if not CAT_VIDEO[ACodec].AceitaTaxaBits then
+    Exit(False);
+  AMin    := CAT_VIDEO[ACodec].TbMin;
+  AMax    := CAT_VIDEO[ACodec].TbMax;
+  APadrao := CAT_VIDEO[ACodec].TbPadrao;
+  Result  := True;
 end;
 
 class function TGerenciadorCatalogo.PresetsVideo(
@@ -535,6 +619,17 @@ end;
 class function TGerenciadorCatalogo.EncoderAudio(ACodec: TCodecAudio): string;
 begin
   Result := CAT_AUDIO[ACodec].Encoder;
+end;
+
+class function TGerenciadorCatalogo.CodecAudioPorRotulo(
+  const ARotulo: string): TCodecAudio;
+var
+  a: TCodecAudio;
+begin
+  for a := Low(TCodecAudio) to High(TCodecAudio) do
+    if SameText(CAT_AUDIO[a].Rotulo, ARotulo) then
+      Exit(a);
+  Result := caOriginal;
 end;
 
 class function TGerenciadorCatalogo.ControleAudio(
