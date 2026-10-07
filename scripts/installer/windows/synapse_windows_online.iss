@@ -7,9 +7,8 @@
 ;   (GitHub → CDN, gyan.dev → Sourceforge, etc.) — causando o erro falso
 ;   de "conexão com a internet".
 ;
-;   Solução: todos os downloads são feitos via PowerShell + BITS
-;   (Background Intelligent Transfer Service), que é nativo do Windows,
-;   segue redirects, suporta TLS 1.2/1.3 e retoma downloads interrompidos.
+;   Solução: os downloads são feitos via PowerShell + curl.exe do Windows,
+;   que segue redirects HTTPS explicitamente, com BITS/WebClient como fallback.
 ;
 ; Estrutura de ferramentas (compatível com udependencias.pas):
 ;   tools\ffmpeg\bin\ffmpeg.exe      (chave 'ffmpeg')
@@ -49,6 +48,7 @@ brazilianportuguese.DepsAborted=Instalação cancelada pelo usuário.
 brazilianportuguese.DepsFailed=Falha ao baixar ou instalar uma ou mais dependências.%n%nDetalhe: %1%n%nO Synapse pode funcionar parcialmente sem todas as dependências.%nVocê pode instalá-las manualmente depois.
 brazilianportuguese.DepsInfo=O instalador vai baixar as seguintes ferramentas necessárias:%n%n%1%nIsso pode demorar alguns minutos dependendo de sua conexão.
 brazilianportuguese.PSNotAvail=PowerShell não encontrado. Não foi possível instalar as dependências automaticamente.
+brazilianportuguese.FFmpegFailed=Não foi possível baixar e instalar o FFmpeg e o ffprobe.%n%nVerifique sua conexão com a internet e execute o instalador novamente. O Synapse pode funcionar parcialmente sem essa dependência. Página do build essentials: https://www.gyan.dev/ffmpeg/builds/
 
 [Files]
 ; Executável principal
@@ -75,14 +75,13 @@ Type: filesandordirs; Name: "{app}\tools"
 
 // ---------------------------------------------------------------------------
 // URLs das dependências
-// Obs: são as URLs "canônicas" dos GitHub Releases. O PowerShell+BITS
-// segue os redirecionamentos automaticamente (GitHub → S3/CDN, etc.)
+// O PowerShell usa curl.exe com suporte explícito a redirecionamentos.
 // ---------------------------------------------------------------------------
 const
   // yt-dlp: binário único, sem extração necessária
   URL_YTDLP  = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe';
 
-  // FFmpeg: essentials build do gyan.dev (~90 MB), contém ffmpeg.exe + ffprobe.exe
+  // FFmpeg: build essentials do gyan.dev (~110 MB), com ffmpeg.exe + ffprobe.exe
   URL_FFMPEG = 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip';
 
   // ImageMagick: portable Q16 x64 (7z) do GitHub Releases oficial
@@ -175,38 +174,44 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-// DownloadViaBITS: baixa um arquivo usando BITS via PowerShell.
-// BITS lida com HTTPS, redirects e certificados TLS corretamente.
+// DownloadFile: segue redirects com o curl do Windows e usa BITS/WebClient
+// como fallback para sistemas sem curl ou com falha transitória no download.
 // ---------------------------------------------------------------------------
-function DownloadViaBITS(const Url, Dest: string): Boolean;
+function DownloadFile(const Url, Dest: string): Boolean;
 var
   Script: string;
   ExitCode: Integer;
 begin
-  Log('Iniciando download via BITS: ' + Url);
+  Log('Iniciando download: ' + Url);
   Log('Destino: ' + Dest);
 
   Script :=
     'Set-StrictMode -Version Latest' + #13#10 +
     '$ErrorActionPreference = "Stop"' + #13#10 +
     'try {' + #13#10 +
-    '  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13' + #13#10 +
     '  $dest = "' + Dest + '"' + #13#10 +
     '  $url  = "' + Url  + '"' + #13#10 +
     '  $destDir = Split-Path $dest -Parent' + #13#10 +
     '  if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }' + #13#10 +
-    '  # Tenta BITS primeiro (melhor para arquivos grandes)' + #13#10 +
+    '  $curl = Join-Path $env:SystemRoot "System32\curl.exe"' + #13#10 +
+    '  if (Test-Path -LiteralPath $curl) {' + #13#10 +
+    '    Remove-Item -LiteralPath $dest -Force -ErrorAction SilentlyContinue' + #13#10 +
+    '    & $curl --fail --location --retry 3 --connect-timeout 30 --silent --show-error --output $dest $url' + #13#10 +
+    '    if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $dest) -and (Get-Item -LiteralPath $dest).Length -ge 1000) { exit 0 }' + #13#10 +
+    '    Remove-Item -LiteralPath $dest -Force -ErrorAction SilentlyContinue' + #13#10 +
+    '  }' + #13#10 +
+    '  # Fallback para BITS; se falhar, tenta WebClient.' + #13#10 +
     '  try {' + #13#10 +
     '    Import-Module BitsTransfer -ErrorAction Stop' + #13#10 +
     '    Start-BitsTransfer -Source $url -Destination $dest -TransferType Download -ErrorAction Stop' + #13#10 +
     '  } catch {' + #13#10 +
-    '    # Fallback: Invoke-WebRequest com User-Agent de browser' + #13#10 +
+    '    Remove-Item -LiteralPath $dest -Force -ErrorAction SilentlyContinue' + #13#10 +
     '    $wc = New-Object System.Net.WebClient' + #13#10 +
     '    $wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")'  + #13#10 +
     '    $wc.DownloadFile($url, $dest)' + #13#10 +
     '  }' + #13#10 +
-    '  if (-not (Test-Path $dest) -or (Get-Item $dest).Length -lt 1000) {' + #13#10 +
-    '    Write-Error "Arquivo baixado e invalido ou vazio."' + #13#10 +
+    '  if (-not (Test-Path -LiteralPath $dest) -or (Get-Item -LiteralPath $dest).Length -lt 1000) {' + #13#10 +
+    '    Write-Error "Arquivo baixado invalido ou vazio."' + #13#10 +
     '    exit 2' + #13#10 +
     '  }' + #13#10 +
     '  exit 0' + #13#10 +
@@ -350,7 +355,7 @@ begin
     begin
       ProgressPage.SetText('Baixando yt-dlp...', URL_YTDLP);
       ProgressPage.SetProgress(0, 3);
-      if DownloadViaBITS(URL_YTDLP, TmpDir + '\yt-dlp.exe') then
+      if DownloadFile(URL_YTDLP, TmpDir + '\yt-dlp.exe') then
       begin
         ForceDirectories(TDir + '\ytdlp');
         CopyFile(TmpDir + '\yt-dlp.exe', TDir + '\ytdlp\yt-dlp.exe', False);
@@ -362,23 +367,28 @@ begin
     // ── FFmpeg ───────────────────────────────────────────────────────────────
     if NeedsFFmpeg then
     begin
-      ProgressPage.SetText('Baixando FFmpeg (~90 MB)...', URL_FFMPEG);
+      ProgressPage.SetText('Baixando FFmpeg essentials (~110 MB)...', URL_FFMPEG);
       ProgressPage.SetProgress(1, 3);
-      if DownloadViaBITS(URL_FFMPEG, TmpDir + '\ffmpeg.zip') then
+      if DownloadFile(URL_FFMPEG, TmpDir + '\ffmpeg.zip') then
       begin
         ProgressPage.SetText('Extraindo FFmpeg...', '');
         ExtDir := TmpDir + '\ffmpeg_ext';
         if UnzipViaPowerShell(TmpDir + '\ffmpeg.zip', ExtDir) then
         begin
           BinDir := EncontrarExeNaSubpasta(ExtDir, 'ffmpeg.exe');
-          if BinDir <> '' then
+          if (BinDir <> '') and
+             FileExists(BinDir + '\ffprobe.exe') then
           begin
             ForceDirectories(TDir + '\ffmpeg\bin');
-            CopyFile(BinDir + '\ffmpeg.exe',  TDir + '\ffmpeg\bin\ffmpeg.exe',  False);
-            CopyFile(BinDir + '\ffprobe.exe', TDir + '\ffmpeg\bin\ffprobe.exe', False);
-            Log('FFmpeg e ffprobe instalados com sucesso.');
+            if CopyFile(BinDir + '\ffmpeg.exe', TDir + '\ffmpeg\bin\ffmpeg.exe', False) and
+               CopyFile(BinDir + '\ffprobe.exe', TDir + '\ffmpeg\bin\ffprobe.exe', False) and
+               FileExists(TDir + '\ffmpeg\bin\ffmpeg.exe') and
+               FileExists(TDir + '\ffmpeg\bin\ffprobe.exe') then
+              Log('FFmpeg e ffprobe instalados com sucesso.')
+            else
+              Log('AVISO: falha ao copiar ffmpeg.exe e/ou ffprobe.exe.');
           end else
-            Log('AVISO: ffmpeg.exe nao encontrado na estrutura do ZIP.');
+            Log('AVISO: ffmpeg.exe e/ou ffprobe.exe nao encontrados na estrutura do ZIP.');
         end else
           Log('AVISO: falha ao extrair ffmpeg.zip');
       end else
@@ -390,7 +400,7 @@ begin
     begin
       ProgressPage.SetText('Baixando ImageMagick...', URL_MAGICK);
       ProgressPage.SetProgress(2, 3);
-      if DownloadViaBITS(URL_MAGICK, TmpDir + '\magick.7z') then
+      if DownloadFile(URL_MAGICK, TmpDir + '\magick.7z') then
       begin
         ProgressPage.SetText('Extraindo ImageMagick...', '');
         ExtDir := TmpDir + '\magick_ext';
@@ -418,6 +428,11 @@ begin
   finally
     ProgressPage.Hide;
   end;
+
+  if NeedsFFmpeg and
+     (not FileExists(TDir + '\ffmpeg\bin\ffmpeg.exe') or
+      not FileExists(TDir + '\ffmpeg\bin\ffprobe.exe')) then
+    MsgBox(CustomMessage('FFmpegFailed'), mbError, MB_OK);
 end;
 
 // ---------------------------------------------------------------------------
@@ -446,7 +461,7 @@ begin
   // Monta a lista do que será baixado para informar o usuário
   DepList := '';
   if NeedsYtDlp  then DepList := DepList + '  • yt-dlp' + #13#10;
-  if NeedsFFmpeg then DepList := DepList + '  • FFmpeg (ffmpeg + ffprobe, ~90 MB)' + #13#10;
+  if NeedsFFmpeg then DepList := DepList + '  • FFmpeg essentials (ffmpeg + ffprobe, ~110 MB)' + #13#10;
   if NeedsMagick then DepList := DepList + '  • ImageMagick 7 Portable' + #13#10;
 
   if DepList <> '' then
