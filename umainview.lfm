@@ -808,6 +808,7 @@ object frmMainView: TfrmMainView
       object MenuItem9: TMenuItem
         Caption = 'Preferências'
         ShortCut = 16572
+        OnClick = MenuItem9Click
       end
       object MenuItem10: TMenuItem
         Caption = 'Encerrar'

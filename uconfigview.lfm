@@ -1,0 +1,353 @@
+object frConfigView: TfrConfigView
+  Left = 0
+  Height = 790
+  Top = 0
+  Width = 1010
+  ClientHeight = 790
+  ClientWidth = 1010
+  LCLVersion = '4.8.0.0'
+  TabOrder = 0
+  DesignLeft = 639
+  DesignTop = 118
+  object Sb: TScrollBox
+    Left = 0
+    Height = 790
+    Top = 0
+    Width = 1010
+    HorzScrollBar.Page = 1004
+    HorzScrollBar.Tracking = True
+    VertScrollBar.Page = 778
+    VertScrollBar.Tracking = True
+    Align = alClient
+    BorderStyle = bsNone
+    ClientHeight = 790
+    ClientWidth = 1010
+    TabOrder = 0
+    object Conteudo: TPanel
+      Left = 10
+      Height = 770
+      Top = 10
+      Width = 990
+      Align = alClient
+      BorderSpacing.Around = 10
+      BevelOuter = bvNone
+      ClientHeight = 770
+      ClientWidth = 990
+      TabOrder = 0
+      object LblTitulo: TLabel
+        Left = 16
+        Height = 30
+        Top = 8
+        Width = 141
+        Align = alCustom
+        Caption = 'Configurações'
+        Font.Height = -21
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object LblSubtitulo: TLabel
+        Left = 18
+        Height = 15
+        Top = 46
+        Width = 266
+        Caption = 'Preferências gerais de download e processamento.'
+        Font.Color = clGray
+        ParentFont = False
+      end
+      object grpDestino: TGroupBox
+        Left = 16
+        Height = 88
+        Top = 76
+        Width = 968
+        Align = alCustom
+        Caption = '1. Pasta de destino'
+        ClientHeight = 68
+        ClientWidth = 964
+        TabOrder = 3
+        object lblDestino: TLabel
+          Left = 16
+          Height = 15
+          Top = 3
+          Width = 343
+          Caption = 'Pasta padrão onde os arquivos baixados e convertidos são salvos:'
+        end
+        object FDirectory: TDirectoryEdit
+          Left = 16
+          Height = 23
+          Top = 27
+          Width = 700
+          ShowHidden = False
+          ButtonWidth = 23
+          NumGlyphs = 1
+          MaxLength = 0
+          TabOrder = 0
+        end
+      end
+      object grpNome: TGroupBox
+        Left = 16
+        Height = 128
+        Top = 168
+        Width = 968
+        Caption = '2. Nome do arquivo final'
+        ClientHeight = 108
+        ClientWidth = 964
+        TabOrder = 4
+        object lblNome: TLabel
+          Left = 16
+          Height = 15
+          Top = 5
+          Width = 235
+          Caption = 'Como o arquivo de saída deve ser nomeado:'
+        end
+        object FRbOriginal: TRadioButton
+          Left = 16
+          Height = 19
+          Top = 29
+          Width = 274
+          Caption = 'Usar o título original do vídeo (padrão do yt-dlp)'
+          TabOrder = 0
+          OnChange = RbModoChange
+        end
+        object FRbPadrao: TRadioButton
+          Left = 16
+          Height = 19
+          Top = 53
+          Width = 275
+          Caption = 'Nome automático do Synapse (com data e hora)'
+          TabOrder = 1
+          OnChange = RbModoChange
+        end
+        object FRbDefinir: TRadioButton
+          Left = 16
+          Height = 19
+          Top = 77
+          Width = 130
+          Caption = 'Nome personalizado:'
+          TabOrder = 2
+          OnChange = RbModoChange
+        end
+        object FEdtNome: TEdit
+          Left = 181
+          Height = 23
+          Top = 75
+          Width = 420
+          TabOrder = 3
+        end
+      end
+      object grpFormato: TGroupBox
+        Left = 16
+        Height = 150
+        Top = 298
+        Width = 968
+        Caption = '3. Formato de saída e conversão'
+        ClientHeight = 130
+        ClientWidth = 964
+        TabOrder = 5
+        object lblFormato: TLabel
+          Left = 16
+          Height = 15
+          Top = 5
+          Width = 156
+          Caption = 'Formato / resolução de saída:'
+        end
+        object lblEditor: TLabel
+          Left = 16
+          Height = 15
+          Top = 67
+          Width = 233
+          Caption = 'Editor de vídeo (define codecs compatíveis):'
+        end
+        object lblProc: TLabel
+          Left = 430
+          Height = 15
+          Top = 24
+          Width = 127
+          Caption = 'Tipo de processamento:'
+        end
+        object FCmbFormato: TComboBox
+          Left = 16
+          Height = 23
+          Top = 27
+          Width = 380
+          ItemHeight = 15
+          Style = csDropDownList
+          TabOrder = 0
+        end
+        object FCmbEditor: TComboBox
+          Left = 16
+          Height = 23
+          Top = 89
+          Width = 380
+          ItemHeight = 15
+          Style = csDropDownList
+          TabOrder = 1
+        end
+        object FRbCpu: TRadioButton
+          Left = 430
+          Height = 19
+          Top = 44
+          Width = 116
+          Caption = 'CPU / Processador'
+          TabOrder = 2
+        end
+        object FRbGpu: TRadioButton
+          Left = 660
+          Height = 19
+          Top = 44
+          Width = 128
+          Caption = 'GPU / Placa de vídeo'
+          TabOrder = 3
+        end
+        object FChkOversample: TCheckBox
+          Left = 430
+          Height = 19
+          Top = 70
+          Width = 380
+          Caption = 'Oversample: forçar o redimensionamento para a resolução escolhida'
+          TabOrder = 4
+        end
+      end
+      object grpCookies: TGroupBox
+        Left = 16
+        Height = 222
+        Top = 450
+        Width = 968
+        Caption = '4. Cookies (YouTube / "não sou um robô")'
+        ClientHeight = 202
+        ClientWidth = 964
+        TabOrder = 6
+        object lblCookInfo: TLabel
+          Left = 16
+          Height = 54
+          Top = 20
+          Width = 930
+          AutoSize = False
+          Caption = 'Para vídeos que exigem login ou exibem "Sign in to confirm you''re not a bot". Fluxo recomendado: abra o login/captcha no navegador, entre na conta, e FECHE o navegador — enquanto ele está aberto o Windows trava o arquivo de cookies e o yt-dlp não consegue lê-lo. O Synapse não lê, copia nem grava o conteúdo dos cookies: só repassa o navegador ou o caminho do arquivo ao yt-dlp.'
+          WordWrap = True
+        end
+        object FRbCookNenhum: TRadioButton
+          Left = 16
+          Height = 19
+          Top = 82
+          Width = 108
+          Caption = 'Não usar cookies'
+          TabOrder = 0
+          OnChange = RbCookChange
+        end
+        object FRbCookNaveg: TRadioButton
+          Left = 16
+          Height = 19
+          Top = 108
+          Width = 103
+          Caption = 'Usar navegador:'
+          TabOrder = 1
+          OnChange = RbCookChange
+        end
+        object FCmbNavegador: TComboBox
+          Left = 196
+          Height = 23
+          Top = 106
+          Width = 250
+          ItemHeight = 15
+          Style = csDropDownList
+          TabOrder = 2
+          OnChange = RbCookChange
+        end
+        object FBtnLogin: TButton
+          Left = 452
+          Height = 26
+          Top = 104
+          Width = 200
+          Caption = '1) Abrir login/captcha'
+          TabOrder = 7
+          OnClick = BtnLoginClick
+        end
+        object FBtnFechar: TButton
+          Left = 658
+          Height = 26
+          Top = 104
+          Width = 200
+          Caption = '2) Fechar navegador (liberar cookies)'
+          TabOrder = 8
+          OnClick = BtnFecharClick
+        end
+        object FRbCookArquivo: TRadioButton
+          Left = 16
+          Height = 19
+          Top = 136
+          Width = 146
+          Caption = 'Usar arquivo cookies.txt:'
+          TabOrder = 3
+          OnChange = RbCookChange
+        end
+        object FEdtArquivo: TEdit
+          Left = 212
+          Height = 23
+          Top = 134
+          Width = 360
+          TabOrder = 4
+        end
+        object FBtnProcurar: TButton
+          Left = 578
+          Height = 26
+          Top = 132
+          Width = 96
+          Caption = 'Procurar...'
+          TabOrder = 5
+          OnClick = BtnProcurarClick
+        end
+        object FBtnExportar: TButton
+          Left = 680
+          Height = 26
+          Top = 132
+          Width = 178
+          Caption = 'Exportar do navegador (.txt)'
+          TabOrder = 6
+          OnClick = BtnExportarClick
+        end
+        object FLblCookAviso: TLabel
+          Left = 16
+          Height = 28
+          Top = 182
+          Width = 930
+          AutoSize = False
+          WordWrap = True
+        end
+      end
+      object FChkAtualizacoes: TCheckBox
+        Left = 16
+        Height = 19
+        Top = 687
+        Width = 227
+        Caption = 'Verificar atualizações ao abrir o Synapse'
+        TabOrder = 0
+      end
+      object BtnSalvar: TButton
+        Left = 16
+        Height = 34
+        Top = 717
+        Width = 200
+        Caption = 'Salvar configurações'
+        TabOrder = 1
+        OnClick = BtnSalvarClick
+      end
+      object BtnRestaurar: TButton
+        Left = 232
+        Height = 34
+        Top = 717
+        Width = 160
+        Caption = 'Restaurar padrões'
+        TabOrder = 2
+        OnClick = BtnRestaurarClick
+      end
+      object FLblStatus: TLabel
+        Left = 412
+        Height = 1
+        Top = 757
+        Width = 1
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+    end
+  end
+end

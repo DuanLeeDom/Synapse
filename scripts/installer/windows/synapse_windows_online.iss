@@ -15,6 +15,12 @@
 ;   tools\ffmpeg\bin\ffprobe.exe     (chave 'qt')
 ;   tools\ytdlp\yt-dlp.exe           (chave 'ytdlp')
 ;   tools\imagemagick\magick.exe     (chave 'imagemagick')
+;
+; EXECUTAVEL DO SYNAPSE:
+;   Este instalador EMBUTE o executavel (synapse.exe, na raiz do repositorio),
+;   copiado pela secao [Files]. NAO ha consulta nem download da "ultima versao"
+;   no GitHub aqui: a verificacao de atualizacoes fica a cargo do proprio
+;   aplicativo. Por isso recompile este instalador a cada nova versao do exe.
 ; =============================================================================
 
 [Setup]
@@ -51,8 +57,9 @@ brazilianportuguese.PSNotAvail=PowerShell não encontrado. Não foi possível in
 brazilianportuguese.FFmpegFailed=Não foi possível baixar e instalar o FFmpeg e o ffprobe.%n%nVerifique sua conexão com a internet e execute o instalador novamente. O Synapse pode funcionar parcialmente sem essa dependência. Página do build essentials: https://www.gyan.dev/ffmpeg/builds/
 
 [Files]
-; Executável principal
-Source: "C:\Users\domcat\Documents\dev\Synapse\synapse.exe"; DestDir: "{app}"; Flags: ignoreversion
+; Executavel do Synapse embutido (copiado junto com este instalador).
+; Caminho relativo a este script (raiz do repositorio = ..\..\..).
+Source: "..\..\..\synapse.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Synapse";                        Filename: "{app}\synapse.exe"
@@ -354,7 +361,7 @@ begin
     if NeedsYtDlp then
     begin
       ProgressPage.SetText('Baixando yt-dlp...', URL_YTDLP);
-      ProgressPage.SetProgress(0, 3);
+      ProgressPage.SetProgress(1, 3);
       if DownloadFile(URL_YTDLP, TmpDir + '\yt-dlp.exe') then
       begin
         ForceDirectories(TDir + '\ytdlp');
@@ -368,7 +375,7 @@ begin
     if NeedsFFmpeg then
     begin
       ProgressPage.SetText('Baixando FFmpeg essentials (~110 MB)...', URL_FFMPEG);
-      ProgressPage.SetProgress(1, 3);
+      ProgressPage.SetProgress(2, 3);
       if DownloadFile(URL_FFMPEG, TmpDir + '\ffmpeg.zip') then
       begin
         ProgressPage.SetText('Extraindo FFmpeg...', '');
@@ -399,7 +406,7 @@ begin
     if NeedsMagick then
     begin
       ProgressPage.SetText('Baixando ImageMagick...', URL_MAGICK);
-      ProgressPage.SetProgress(2, 3);
+      ProgressPage.SetProgress(3, 3);
       if DownloadFile(URL_MAGICK, TmpDir + '\magick.7z') then
       begin
         ProgressPage.SetText('Extraindo ImageMagick...', '');

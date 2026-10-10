@@ -23,7 +23,11 @@ unit uDependencias;
 
   Este catalogo tambem e o unico lugar do projeto que precisa saber o nome
   do executavel de uma ferramenta. As demais units pedem o caminho por
-  TDependencia e nunca montam string de comando na mao. }
+  TDependencia e nunca montam string de comando na mao.
+
+  O synapse.ini (secao [dependencies]) pode estar ao lado do exe (portatil/dev)
+  ou na pasta de configuracao do usuario quando a pasta do exe nao for gravavel
+  - ver CaminhoIni. }
 
 {$mode ObjFPC}{$H+}
 
@@ -55,6 +59,13 @@ type
   TGerenciadorDependencias = class
   public
     class function BaseDir: string;
+
+    { Caminho completo do synapse.ini. Fica ao lado do executavel quando essa
+      pasta e gravavel (modo portatil/dev); caso contrario vai para a pasta de
+      configuracao do usuario, porque uma instalacao em C:\Program Files nao
+      permite ao usuario comum gravar la. }
+    class function CaminhoIni: string;
+
     class function PastaTools: string;
     class function Caminho(ADep: TDependencia): string;
     class function Localizado(ADep: TDependencia): Boolean;
@@ -159,6 +170,26 @@ begin
   {$ENDIF}
 end;
 
+{ True se o arquivo existente pode ser aberto para escrita. Usado para decidir
+  se o ini ao lado do executavel serve (modo portatil) ou se e preciso recorrer
+  a pasta de configuracao do usuario. }
+function PodeGravarArquivo(const ACaminho: string): Boolean;
+var
+  St: TFileStream;
+begin
+  Result := False;
+  try
+    St := TFileStream.Create(ACaminho, fmOpenWrite);
+    try
+      Result := True;
+    finally
+      St.Free;
+    end;
+  except
+    Result := False;
+  end;
+end;
+
 { Le um TStream inteiro para string. TStream nao tem ReadAll no FPC, e a
   leitura por laco e mantida porque outros pontos do projeto tambem
   precisam dela. }
@@ -191,7 +222,7 @@ begin
   Result := '';
   Linhas := TStringList.Create;
   try
-    Arquivo := TGerenciadorDependencias.BaseDir + NOME_INI;
+    Arquivo := TGerenciadorDependencias.CaminhoIni;
     { Neste FPC LoadFromFile e procedure e lanca excecao se falhar, ao
       contrario do Delphi, onde devolve booleano. }
     if not FileExists(Arquivo) then
@@ -286,6 +317,42 @@ begin
     {$ENDIF}
     GBases := Result;
   end;
+end;
+
+class function TGerenciadorDependencias.CaminhoIni: string;
+var
+  Dir: string;
+begin
+  { 1) Modo portatil: se ja existe um synapse.ini ao lado do executavel e ele
+    pode ser gravado, e esse que vale (mantem o comportamento de sempre em
+    builds de desenvolvimento e instalacoes portateis). }
+  Dir := IncludeTrailingPathDelimiter(BaseDir) + NOME_INI;
+  if FileExists(Dir) and PodeGravarArquivo(Dir) then
+    Exit(Dir);
+
+  { 2) Pasta de configuracao do usuario - sempre gravavel pelo usuario atual. }
+  {$IFDEF WINDOWS}
+  Dir := GetEnvironmentVariable('APPDATA');
+  {$ELSE}
+  Dir := GetEnvironmentVariable('XDG_CONFIG_HOME');
+  if Dir = '' then
+    Dir := IncludeTrailingPathDelimiter(GetEnvironmentVariable('HOME')) + '.config';
+  {$ENDIF}
+
+  { Sem a variavel de ambiente, mantem a pasta do executavel como ultimo
+    recurso (pode falhar com "Acesso negado", mas nao piora o caso atual). }
+  if Dir = '' then
+    Exit(IncludeTrailingPathDelimiter(BaseDir) + NOME_INI);
+
+  Dir := IncludeTrailingPathDelimiter(Dir) + 'Synapse';
+  try
+    if not DirectoryExists(Dir) then
+      ForceDirectories(Dir);
+  except
+    Exit(IncludeTrailingPathDelimiter(BaseDir) + NOME_INI);
+  end;
+
+  Result := IncludeTrailingPathDelimiter(Dir) + NOME_INI;
 end;
 
 class function TGerenciadorDependencias.PastaTools: string;

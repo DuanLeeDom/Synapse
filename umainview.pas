@@ -9,7 +9,7 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, EditBtn,
   Menus, ExtCtrls, RTTICtrls, Process, uDependencyManager, LCLIntf, LMessages,
   LCLType, ComCtrls, uMediaPipeline, uDownloadService, uAboutView,
-  uImageProcView,
+  uImageProcView, uConfigView, uVersao, uConfig, uUpdater,
   {$IFDEF UNIX}
   Unix
   {$ENDIF}
@@ -85,8 +85,12 @@ type
     procedure MenuItem14Click(Sender: TObject);
     procedure MenuItem15Click(Sender: TObject);
     procedure MenuItem19Click(Sender: TObject);
+    procedure MenuItem9Click(Sender: TObject);
+    procedure MenuItemVerAtualClick(Sender: TObject);
   private
     FFrameAtivo: TCustomFrame;
+    FMenuItemVerAtual: TMenuItem;
+    procedure InstalarMenuAtualizacao;
   public
   end;
 
@@ -112,7 +116,34 @@ begin
   { Texto com acento definido por codigo: o leitor de LFM usa a codepage do
     sistema e quebraria o texto. Ver TEXTO_BOTAO em uAboutView. }
   MenuItem30.Caption := TEXTO_BOTAO;
+  { "Preferências" existe no menu sem manipulador no .lfm; liga aqui para nao
+    editar o recurso. }
+  MenuItem9.OnClick := @MenuItem9Click;
+
+  { Item de menu "Verificar atualizações..." criado por codigo para nao
+    precisar editar o recurso .lfm a cada ajuste. }
+  InstalarMenuAtualizacao;
+
   ExibirFrame(TfrMediaPipeline);
+
+  { Checagem silenciosa na abertura: so avisa se houver versao mais nova.
+    Pode ser desligada em Preferências. }
+  if Configuracoes.VerificaAtual then
+    VerificarAtualizacoesAsync(False);
+end;
+
+procedure TfrmMainView.InstalarMenuAtualizacao;
+begin
+  FMenuItemVerAtual := TMenuItem.Create(Self);
+  FMenuItemVerAtual.Caption := 'Verificar atualizações...';
+  FMenuItemVerAtual.OnClick := @MenuItemVerAtualClick;
+  { Acrescenta ao menu "Suporte", logo apos "Sobre". }
+  MenuItem5.Add(FMenuItemVerAtual);
+end;
+
+procedure TfrmMainView.MenuItemVerAtualClick(Sender: TObject);
+begin
+  VerificarAtualizacoesAsync(True);
 end;
 
 procedure TfrmMainView.ExibirFrame(AFrameClass: TCustomFrameClass);
@@ -229,6 +260,11 @@ procedure TfrmMainView.MenuItem19Click(Sender: TObject);
 begin
   ExibirFrame(TfrMediaPipeline);
   TfrMediaPipeline(FFrameAtivo).EnfocarFila;
+end;
+
+procedure TfrmMainView.MenuItem9Click(Sender: TObject);
+begin
+  ExibirFrame(TfrConfigView);
 end;
 
 procedure TfrmMainView.MenuItem10Click(Sender: TObject);

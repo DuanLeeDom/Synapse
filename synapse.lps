@@ -7,7 +7,7 @@
       <Unit>
         <Filename Value="synapse.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="11"/>
+        <EditorIndex Value="12"/>
         <CursorPos X="21" Y="11"/>
         <UsageCount Value="204"/>
         <Loaded Value="True"/>
@@ -19,8 +19,8 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uMainView"/>
-        <TopLine Value="166"/>
-        <CursorPos X="40" Y="171"/>
+        <TopLine Value="242"/>
+        <CursorPos X="29" Y="260"/>
         <UsageCount Value="204"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -29,7 +29,7 @@
         <Filename Value="udependencymanager.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uDependencyManager"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="9"/>
         <TopLine Value="59"/>
         <CursorPos X="6" Y="63"/>
         <UsageCount Value="202"/>
@@ -43,8 +43,8 @@
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uMediaPipeline"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="1900"/>
-        <CursorPos X="25" Y="1903"/>
+        <TopLine Value="1904"/>
+        <CursorPos X="63" Y="1922"/>
         <UsageCount Value="41"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -56,7 +56,7 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uAboutView"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="8"/>
         <TopLine Value="91"/>
         <CursorPos Y="107"/>
         <UsageCount Value="200"/>
@@ -70,10 +70,9 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uDownloadService"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="5"/>
         <TopLine Value="14"/>
-        <CursorPos X="38" Y="17"/>
+        <CursorPos X="139" Y="32"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -82,7 +81,7 @@
         <Filename Value="uuiresources.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uUIResources"/>
-        <EditorIndex Value="10"/>
+        <EditorIndex Value="11"/>
         <TopLine Value="133"/>
         <CursorPos Y="167"/>
         <UsageCount Value="41"/>
@@ -92,7 +91,7 @@
         <Filename Value="uhardwaredetector.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uHardwareDetector"/>
-        <EditorIndex Value="9"/>
+        <EditorIndex Value="10"/>
         <TopLine Value="16"/>
         <CursorPos X="48" Y="16"/>
         <UsageCount Value="41"/>
@@ -156,12 +155,57 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uImageProcView"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="3"/>
         <TopLine Value="670"/>
-        <CursorPos X="28" Y="675"/>
+        <CursorPos X="90" Y="693"/>
         <UsageCount Value="24"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uconfig.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uConfig"/>
+        <UsageCount Value="20"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ucookies.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uCookies"/>
+        <UsageCount Value="20"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uconfigview.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frConfigView"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uConfigView"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="67"/>
+        <CursorPos X="63" Y="83"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uversao.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uVersao"/>
+        <UsageCount Value="20"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uupdatercore.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uUpdaterCore"/>
+        <UsageCount Value="20"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uupdater.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uUpdater"/>
+        <UsageCount Value="20"/>
       </Unit>
       <Unit>
         <Filename Value="usetup.pas"/>
@@ -254,7 +298,7 @@
       </Unit>
       <Unit>
         <Filename Value="../../../../../lazarus/lcl/include/control.inc"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="7"/>
         <TopLine Value="3993"/>
         <CursorPos Y="4010"/>
         <UsageCount Value="10"/>
@@ -263,16 +307,16 @@
       <Unit>
         <Filename Value="../../../../../lazarus/components/lazutils/lazutilities.pas"/>
         <UnitName Value="LazUtilities"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="4"/>
         <TopLine Value="59"/>
-        <CursorPos X="8" Y="75"/>
+        <CursorPos X="33" Y="65"/>
         <UsageCount Value="12"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="udownloadservice.lfm"/>
         <HasResources Value="True"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="6"/>
         <TopLine Value="479"/>
         <CursorPos X="4" Y="516"/>
         <UsageCount Value="10"/>
@@ -280,7 +324,7 @@
         <DefaultSyntaxHighlighter Value="LFM"/>
       </Unit>
     </Units>
-    <JumpHistory HistoryIndex="18">
+    <JumpHistory HistoryIndex="21">
       <Position>
         <Filename Value="synapse.lpr"/>
         <Caret Line="11" Column="81"/>
@@ -356,6 +400,18 @@
       <Position>
         <Filename Value="udownloadservice.lfm"/>
         <Caret Line="16" Column="36"/>
+      </Position>
+      <Position>
+        <Filename Value="umediapipeline.pas"/>
+        <Caret Line="1910" Column="34" TopLine="1902"/>
+      </Position>
+      <Position>
+        <Filename Value="umainview.pas"/>
+        <Caret Line="173" Column="6" TopLine="166"/>
+      </Position>
+      <Position>
+        <Filename Value="umainview.pas"/>
+        <Caret Line="248" Column="35" TopLine="242"/>
       </Position>
     </JumpHistory>
     <RunParams>

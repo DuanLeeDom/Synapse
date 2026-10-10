@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, StrUtils, Forms, Controls, ExtCtrls,
   StdCtrls, EditBtn, ComCtrls, Dialogs, ComboEx, Process, FileUtil,
   uUIResources, uHardwareDetector, uVideoQueue, uVideoQueueView,
-  uProcessos, uDependencias;
+  uProcessos, uDependencias, uConfig, uCookies;
 
 type
   TVideoEditorID = (
@@ -149,6 +149,7 @@ type
     procedure AtualizarOpcoesAudio(CodecIndex: Integer);
     function  GerarIDAleatorio(Tamanho: Integer): string;
     procedure ConfigurarInterface;
+    procedure AplicarConfiguracoes;
     function  CodecSelecionado: string;
     function  NomePrefixoParaItem(AItem: TVideoQueueItem): string;
     procedure AtualizarParametrosDoItem(AItem: TVideoQueueItem);
@@ -696,15 +697,8 @@ begin
   ComboBox_Format_Videos.Items.BeginUpdate;
   try
     ComboBox_Format_Videos.Items.Clear;
-    ComboBox_Format_Videos.Items.Add('Original (melhor disponível)');
-    ComboBox_Format_Videos.Items.Add('4K Ultra HD (2160p)');
-    ComboBox_Format_Videos.Items.Add('2K Quad HD (1440p)');
-    ComboBox_Format_Videos.Items.Add('Full HD (1080p)');
-    ComboBox_Format_Videos.Items.Add('HD (720p)');
-    ComboBox_Format_Videos.Items.Add('SD (480p)');
-    ComboBox_Format_Videos.Items.Add('360p');
-    ComboBox_Format_Videos.Items.Add('240p');
-    ComboBox_Format_Videos.Items.Add('144p');
+    for i := Low(FORMATOS_VIDEO_NOMES) to High(FORMATOS_VIDEO_NOMES) do
+      ComboBox_Format_Videos.Items.Add(FORMATOS_VIDEO_NOMES[i]);
     ComboBox_Format_Videos.ItemIndex := 0;
   finally
     ComboBox_Format_Videos.Items.EndUpdate;
@@ -1659,6 +1653,10 @@ begin
       [AItem.FormatoYtdlp, AItem.MergeFormat, APasta, AItem.Url]
     );
 
+    { Cookies sao opcionais: navegador (--cookies-from-browser) ou arquivo
+      (--cookies). Nenhum dado de cookie passa por aqui, so token/caminho. }
+    CmdYtdlp := CmdYtdlp + Configuracoes.ComandoCookies;
+
     AItem.Fase     := vqfDownload;
     AItem.Mensagem := 'Baixando...';
     FVideoQueue.AtualizarItem(AItem);
@@ -1667,7 +1665,22 @@ begin
     if not ExecutarComando(CmdYtdlp, 'yt-dlp', AItem, vqfDownload) then
     begin
       if not ProcessoCancelado then
+      begin
         AItem.Mensagem := 'Falha no download';
+        if Configuracoes.UsandoCookies then
+        begin
+          if (Configuracoes.ModoCookies = COOKIES_NAVEGADOR) and
+             NavegadorEmExecucao(Configuracoes.TokenNavegador) then
+            LogLinha('[AVISO] O navegador de cookies está aberto e trava o ' +
+              'arquivo de cookies, o que faz o yt-dlp falhar. Feche o navegador ' +
+              'e tente de novo (Preferências > Cookies > Fechar navegador).')
+          else
+            LogLinha('[AVISO] Os cookies estavam ativos. Se o vídeo exige login ' +
+              'ou aparece "Sign in to confirm you''re not a bot", abra a página no ' +
+              'navegador, faça login e resolva o captcha, e então tente de novo ' +
+              '(Preferências > Cookies > Abrir login/captcha).');
+        end;
+      end;
       Exit;
     end;
 
@@ -1814,37 +1827,17 @@ end;
 
 procedure TfrMediaPipeline.ConfigurarPlataformas;
 var
+  i: Integer;
   Item: TComboExItem;
 begin
   cbx_option_video_editor.ItemsEx.Clear;
-
-  Item := cbx_option_video_editor.ItemsEx.Add;
-  Item.Caption := 'DaVinci Resolve (Free)'; Item.ImageIndex := 0; Item.Indent := 0;
-
-  Item := cbx_option_video_editor.ItemsEx.Add;
-  Item.Caption := 'DaVinci Resolve Studio'; Item.ImageIndex := 0; Item.Indent := 0;
-
-  Item := cbx_option_video_editor.ItemsEx.Add;
-  Item.Caption := 'Kdenlive';               Item.ImageIndex := 1; Item.Indent := 0;
-
-  Item := cbx_option_video_editor.ItemsEx.Add;
-  Item.Caption := 'Shotcut';                Item.ImageIndex := 2; Item.Indent := 0;
-
-  Item := cbx_option_video_editor.ItemsEx.Add;
-  Item.Caption := 'OpenShot';               Item.ImageIndex := 3; Item.Indent := 0;
-
-  Item := cbx_option_video_editor.ItemsEx.Add;
-  Item.Caption := 'Lightworks (Free)';      Item.ImageIndex := 4; Item.Indent := 0;
-
-  Item := cbx_option_video_editor.ItemsEx.Add;
-  Item.Caption := 'Lightworks';             Item.ImageIndex := 4; Item.Indent := 0;
-
-  Item := cbx_option_video_editor.ItemsEx.Add;
-  Item.Caption := 'Flowblade';              Item.ImageIndex := 5; Item.Indent := 0;
-
-  Item := cbx_option_video_editor.ItemsEx.Add;
-  Item.Caption := 'Cinelerra';              Item.ImageIndex := 6; Item.Indent := 0;
-
+  for i := Low(EDITORES_NOMES) to High(EDITORES_NOMES) do
+  begin
+    Item := cbx_option_video_editor.ItemsEx.Add;
+    Item.Caption := EDITORES_NOMES[i];
+    Item.ImageIndex := EDITORES_IMAGENS[i];
+    Item.Indent := 0;
+  end;
   cbx_option_video_editor.ItemIndex := 0;
 end;
 
@@ -1928,19 +1921,50 @@ begin
 end;
 
 procedure TfrMediaPipeline.ConfigurarInterface;
-var
-  PastaDownloads: string;
 begin
   ConfigurarPlataformas;
   HelpManager;
-  AtualizarPerfilEditor;
+  AplicarConfiguracoes;
   MontarFila;
+end;
 
-  PastaDownloads := GetUserDir + 'Downloads';
-  if DirectoryExists(PastaDownloads) then
-    DirectoryEdit.Directory := PastaDownloads
+{ Le as preferencias persistidas e reflete nos controles. Chamado na criacao
+  do frame; como o frame e recriado a cada navegacao, salvar em Preferências
+  e voltar aqui ja basta para aplicar. }
+procedure TfrMediaPipeline.AplicarConfiguracoes;
+var
+  C: TConfiguracoes;
+begin
+  C := Configuracoes;
+
+  if (C.EditorVideo >= 0) and (C.EditorVideo < cbx_option_video_editor.Items.Count) then
+    cbx_option_video_editor.ItemIndex := C.EditorVideo
   else
-    DirectoryEdit.Directory := GetCurrentDir;
+    cbx_option_video_editor.ItemIndex := 0;
+
+  { Reconstroi os combos dependentes do editor (codecs e audio). }
+  AtualizarPerfilEditor;
+
+  if (C.FormatoVideo >= 0) and (C.FormatoVideo < ComboBox_Format_Videos.Items.Count) then
+    ComboBox_Format_Videos.ItemIndex := C.FormatoVideo;
+
+  chk_Oversample.Checked := C.Oversample;
+
+  if C.Processamento = PROCESSO_GPU then
+    rbtm_process_gpu.Checked := True
+  else
+    rbtm_process_cpu.Checked := True;
+
+  case C.ModoNome of
+    MODO_NOME_PADRAO : rbtm_padrao.Checked  := True;
+    MODO_NOME_DEFINIR: rbtm_definir.Checked := True;
+  else
+    rbtm_ytdlp.Checked := True;
+  end;
+  edt_definir.Text := C.NomeArquivo;
+  edt_definir.Visible := rbtm_definir.Checked;
+
+  DirectoryEdit.Directory := C.PastaDestinoEfetiva;
 end;
 
 end.

@@ -134,6 +134,39 @@
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uImageProcView"/>
       </Unit>
+      <Unit>
+        <Filename Value="uconfig.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uConfig"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ucookies.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uCookies"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uconfigview.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frConfigView"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uConfigView"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uversao.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uVersao"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uupdatercore.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uUpdaterCore"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uupdater.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uUpdater"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

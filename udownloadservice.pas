@@ -22,7 +22,8 @@ interface
 uses
     Classes, SysUtils, Forms, Controls, ExtCtrls,
     StdCtrls, EditBtn, ComCtrls, Dialogs,
-    uDownloadModel, uDownloadCatalog, uDependencias, uProcessos;
+    uDownloadModel, uDownloadCatalog, uDependencias, uProcessos, uConfig,
+    uCookies;
 
 type
 
@@ -155,6 +156,9 @@ constructor TfrDownloadService.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   TGerenciadorDownload.Inicializar(FOpcoes);
+  { Pasta padrao vinda das Preferências quando a tela ainda nao tem uma. }
+  if FOpcoes.Pasta = '' then
+    FOpcoes.Pasta := Configuracoes.PastaDestinoEfetiva;
   RegistrarBombas;
   FViewConsole := False;
   grp_console.Align := alNone;
@@ -700,7 +704,24 @@ begin
   if FCancelar then
     Memo_visual_console.Lines.Add('Processo cancelado pelo usuário.')
   else if not ok then
-    Memo_visual_console.Lines.Add('Falha durante o processamento.')
+  begin
+    Memo_visual_console.Lines.Add('Falha durante o processamento.');
+    if Configuracoes.UsandoCookies then
+    begin
+      if (Configuracoes.ModoCookies = COOKIES_NAVEGADOR) and
+         NavegadorEmExecucao(Configuracoes.TokenNavegador) then
+        Memo_visual_console.Lines.Add(
+          'Dica: o navegador de cookies está aberto e trava o arquivo de ' +
+          'cookies, o que faz o yt-dlp falhar. Feche o navegador e tente de ' +
+          'novo (Preferências > Cookies > Fechar navegador).')
+      else
+        Memo_visual_console.Lines.Add(
+          'Dica: os cookies estavam ativos. Se o vídeo exige login ou aparece ' +
+          '"Sign in to confirm you''re not a bot", abra a página no navegador, ' +
+          'faça login e resolva o captcha, e tente de novo (Preferências > ' +
+          'Cookies > Abrir login/captcha).');
+    end;
+  end
   else
     Memo_visual_console.Lines.Add('Pronto.');
 

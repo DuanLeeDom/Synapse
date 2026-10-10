@@ -7,14 +7,12 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, ExtCtrls,
-  StdCtrls, Dialogs, LCLIntf;
+  StdCtrls, Dialogs, LCLIntf,
+  { Versao e endereco do repositorio ficam em um unico lugar (uVersao), para
+    que a tela Sobre, o menu e o verificador de atualizacoes nunca divirjam. }
+  uVersao;
 
 const
-  { Pagina oficial do projeto. Usada pelo menu e pelos botoes desta tela,
-    para nao duplicar o endereco em varios lugares. }
-  URL_REPOSITORIO = 'https://github.com/DuanLeeDom/Synapse';
-  VERSAO_APP     = '1.0.0';
-
   { Textos com acentos. Os arquivos .lfm do projeto estao em UTF-8, mas as
     strings lidas do LFM recebem a codepage do sistema (CP1252 no Windows) e
     os acentos viram caracteres invalidos em tempo de execucao. Um literal

@@ -38,7 +38,7 @@ unit uDownloadModel;
 interface
 
 uses
-  Classes, SysUtils, uDownloadCatalog, uDependencias;
+  Classes, SysUtils, uDownloadCatalog, uDependencias, uConfig;
 
 type
   { Como o download vai ser feito. }
@@ -837,6 +837,11 @@ begin
 
   for i := Low(YTDLP_COMUM) to High(YTDLP_COMUM) do
     Result.Add(YTDLP_COMUM[i]);
+
+  { Cookies, conforme as Preferências: navegador (--cookies-from-browser) ou
+    arquivo (--cookies). Repassa apenas token/caminho; nenhum dado de cookie
+    e lido nem copiado por esta unit. }
+  Configuracoes.AcrescentarCookies(Result);
 
   { --ffmpeg-location so faz sentido quando o yt-dlp precisa do FFmpeg:
     juntar pistas e extrair audio. No metodo simples ele fica de fora, e
